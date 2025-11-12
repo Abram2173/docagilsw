@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-// import QRCode from 'qrcode.react';  // ← Descomenta después de: npm i qrcode.react @types/qrcode.react
+import axios from "axios";  // Para fetch – npm i axios si no lo tienes
+// import QRCode from 'qrcode.react';  // Descomenta si quieres QR: npm i qrcode.react @types/qrcode.react
 import { DashboardHeader } from "@/components/dashboard-header";
 import { DashboardSidebar } from "@/components/dashboard-sidebar";
 import { DashboardFooter } from "@/components/dashboard-footer";
@@ -7,68 +8,59 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Settings, FileText, Database, Edit, TrendingUp, Clock, CheckCircle2, QrCode, FileText as FileTextIcon, User, Loader2 } from "lucide-react";
+import { Settings, FileText, Database, Edit, TrendingUp, Clock, CheckCircle2, FileText as FileTextIcon, User, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Datos hardcodeados como base, pero con fetch simulado
-const initialUsuarios = [
-  { id: 1, nombre: "Juan Pérez", email: "juan@empresa.com", rol: "Solicitante", estado: "Activo" },
-  { id: 2, nombre: "María García", email: "maria@empresa.com", rol: "Aprobador", estado: "Activo" },
-  { id: 3, nombre: "Carlos López", email: "carlos@empresa.com", rol: "Auditor", estado: "Activo" },
-  { id: 4, nombre: "Ana Martínez", email: "ana@empresa.com", rol: "Solicitante", estado: "Pendiente" },
-];
-
-const initialEtapasFlujo = [
-  { numero: 1, nombre: "Iniciación", descripcion: "Creación del documento", folio: "FL-2025-001" },
-  { numero: 2, nombre: "Revisión", descripcion: "Validación inicial", folio: "FL-2025-002" },
-  { numero: 3, nombre: "Asignación", descripcion: "Asignación a aprobador", folio: "FL-2025-003" },
-  { numero: 4, nombre: "Aprobación", descripcion: "Decisión final", folio: "FL-2025-004" },
-  { numero: 5, nombre: "Auditoría", descripcion: "Revisión de cumplimiento", folio: "FL-2025-005" },
-  { numero: 6, nombre: "Finalización", descripcion: "Cierre del proceso", folio: "FL-2025-006" },
-];
-
-const initialReportes = [
-  { id: 1, titulo: "Reporte Mensual de KPIs", fecha: "2025-10-01", tipo: "PDF", estado: "Generado" },
-  { id: 2, titulo: "Auditoría de Cumplimiento", fecha: "2025-09-15", tipo: "Excel", estado: "Pendiente" },
-  { id: 3, titulo: "Análisis de Flujos", fecha: "2025-10-20", tipo: "CSV", estado: "Generado" },
-];
-
-const KPIs = {
-  usuarios: 156,
-  documentos: 247,
-  tiempo: "2.1 días",
-  cumplimiento: "98.5%"
-};
+const API_BASE = "http://127.0.0.1:8000/api";  // Ajusta puerto si cambias
 
 export default function AdministradorPanel() {
   const [currentSection, setCurrentSection] = useState("usuarios");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [usuarios, setUsuarios] = useState(initialUsuarios);
-  const [etapasFlujo, setEtapasFlujo] = useState(initialEtapasFlujo);
-  const [reportes, setReportes] = useState(initialReportes);
+  const [usuarios, setUsuarios] = useState<any[]>([]);
+  const [etapasFlujo, setEtapasFlujo] = useState<any[]>([]);
+  const [reportes, setReportes] = useState<any[]>([]);
+  const [kpis, setKpis] = useState({ usuarios: 0, documentos: 0, tiempo: "0 días", cumplimiento: "0%" });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch simulado (reemplaza con tu API real)
+  const token = localStorage.getItem("token");
+
   useEffect(() => {
     const fetchData = async () => {
+      if (!token) {
+        setError("No autenticado – inicia sesión");
+        setLoading(false);
+        return;
+      }
       setLoading(true);
       setError(null);
       try {
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        // Simula seteo de API
-        setUsuarios(initialUsuarios);
-        setEtapasFlujo(initialEtapasFlujo);
-        setReportes(initialReportes);
-        console.log("Datos cargados (simulado)");
+        const headers = { Authorization: `Token ${token}` };
+        const [usuariosRes, flujosRes, reportesRes, kpisRes] = await Promise.all([
+          axios.get(`${API_BASE}/admin/usuarios/`, { headers }),
+          axios.get(`${API_BASE}/documents/flows/`, { headers }),
+          axios.get(`${API_BASE}/admin/reportes/`, { headers }),
+          axios.get(`${API_BASE}/admin/kpis/`, { headers })
+        ]);
+        setUsuarios(usuariosRes.data);
+        setEtapasFlujo(flujosRes.data);
+        setReportes(reportesRes.data);
+        setKpis(kpisRes.data || { usuarios: 0, documentos: 0, tiempo: "0 días", cumplimiento: "0%" });
+        console.log("Datos cargados desde backend!");
       } catch (err) {
         setError("Error al cargar datos: " + (err as Error).message);
+        console.error(err);
+        // Fallback hardcoded temporal
+        setUsuarios([
+          { id: 1, full_name: "Juan Pérez", email: "juan@instituto.edu.mx", role: "solicitante", estado: "Activo", is_approved: true },
+          { id: 2, full_name: "Test Solicitante", email: "test@instituto.edu.mx", role: "solicitante", estado: "Pendiente", is_approved: false }
+        ]);
       } finally {
         setLoading(false);
       }
     };
     fetchData();
-  }, []);
+  }, [token]);
 
   const sectionMap: Record<string, string> = {
     "Usuarios": "usuarios",
@@ -83,8 +75,19 @@ export default function AdministradorPanel() {
     setCurrentSection(section);
   };
 
-  const handleApproveUser = (userId: number) => {
-    alert(`Usuario ${userId} aprobado exitosamente`);
+  const handleApproveUser = async (userId: number) => {
+    if (!token) {
+      alert("No autenticado");
+      return;
+    }
+    try {
+      const headers = { Authorization: `Token ${token}` };
+      await axios.patch(`${API_BASE}/admin/users/${userId}/approve/`, {}, { headers });
+      setUsuarios(usuarios.map(u => u.id === userId ? { ...u, is_approved: true, estado: "Activo" } : u));
+      alert(`Usuario ${userId} aprobado!`);
+    } catch (err) {
+      alert("Error al aprobar: " + (err as Error).message);
+    }
   };
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
@@ -106,31 +109,37 @@ export default function AdministradorPanel() {
           </div>
         ) : error ? (
           <p className="text-red-500 text-center">{error}</p>
+        ) : usuarios.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-slate-500 mb-4">No hay usuarios para mostrar.</p>
+            <Button onClick={() => window.location.reload()} variant="outline">Actualizar</Button>
+          </div>
         ) : (
-          <div className="w-full overflow-x-auto">  {/* ← Full responsive */}
+          <div className="w-full overflow-x-auto">
+            {/* Pendientes */}
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 mb-6 min-w-full">
               <h3 className="mb-4 text-lg font-semibold text-slate-700">Usuarios Pendientes de Aprobación</h3>
               <div className="space-y-3">
                 {usuarios
-                  .filter((usuario) => usuario.estado === "Pendiente")
-                  .map((usuario) => (
-                    <div key={usuario.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between rounded-lg bg-white p-3 shadow-sm gap-4">
+                  .filter((u: any) => u.estado === "Pendiente")
+                  .map((u: any) => (
+                    <div key={u.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between rounded-lg bg-white p-3 shadow-sm gap-4">
                       <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-500">
                           <User className="h-5 w-5 text-white" />
                         </div>
                         <div>
-                          <p className="font-medium text-slate-900">{usuario.nombre}</p>
-                          <p className="text-sm text-slate-500">{usuario.email}</p>
+                          <p className="font-medium text-slate-900">{u.full_name || u.nombre || 'Sin nombre'}</p>
+                          <p className="text-sm text-slate-500">{u.email}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 w-full sm:w-auto">
                         <Badge variant="secondary" className="bg-sky-100 text-sky-800">
-                          {usuario.rol}
+                          {u.role || u.rol || 'Sin rol'}
                         </Badge>
                         <Button
                           size="sm"
-                          onClick={() => handleApproveUser(usuario.id)}
+                          onClick={() => handleApproveUser(u.id)}
                           className="bg-sky-500 hover:bg-sky-600 text-white shadow-sm"
                         >
                           <CheckCircle2 className="mr-1 h-4 w-4" />
@@ -138,10 +147,11 @@ export default function AdministradorPanel() {
                         </Button>
                       </div>
                     </div>
-                  ))}
+                  )) || <p className="text-slate-500">Sin pendientes</p>}
               </div>
             </div>
 
+            {/* Tabla full */}
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -155,30 +165,25 @@ export default function AdministradorPanel() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {usuarios.map((usuario) => (
-                    <TableRow key={usuario.id} className="hover:bg-slate-50">
-                      <TableCell>{usuario.id}</TableCell>
-                      <TableCell className="font-medium text-slate-900">{usuario.nombre}</TableCell>
-                      <TableCell className="text-slate-600">{usuario.email}</TableCell>
+                  {usuarios.map((u: any) => (
+                    <TableRow key={u.id} className="hover:bg-slate-50">
+                      <TableCell>{u.id}</TableCell>
+                      <TableCell className="font-medium text-slate-900">{u.full_name || u.nombre}</TableCell>
+                      <TableCell>{u.email}</TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="border-sky-200 text-sky-700 bg-sky-50">
-                          {usuario.rol}
+                        <Badge variant="secondary" className="bg-sky-100 text-sky-800">
+                          {u.role || u.rol}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={usuario.estado === "Activo" ? "default" : "secondary"} className="bg-sky-100 text-sky-800">
-                          {usuario.estado}
+                        <Badge variant={u.estado === "Activo" ? "default" : "secondary"} className={u.estado === "Activo" ? "bg-green-100 text-green-800" : "bg-orange-100 text-orange-800"}>
+                          {u.estado || (u.is_approved ? "Activo" : "Pendiente")}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <div className="flex flex-col sm:flex-row gap-2">
-                          <Button size="sm" variant="outline" className="border-slate-200 hover:bg-slate-50">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button size="sm" variant="outline" className="border-slate-200 hover:bg-slate-50">
-                            Ver Detalles
-                          </Button>
-                        </div>
+                        <Button size="sm" onClick={() => handleApproveUser(u.id)} variant="outline" className="border-slate-200 hover:bg-slate-50">
+                          Aprobar
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -192,144 +197,13 @@ export default function AdministradorPanel() {
   );
 
   const renderFlujos = () => (
-    <Card className="animate-in fade-in slide-in-from-bottom-4 border-2 border-sky-200 shadow-slate-100 duration-700">
-      <CardHeader className="bg-gradient-to-r from-sky-50 to-white">
-        <CardTitle className="flex items-center gap-3 text-2xl text-slate-900">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-sky-600 shadow-lg">
-            <FileText className="h-6 w-6 text-white" />
-          </div>
-          Gestión de Flujos de Trabajo
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-6">
-        <div className="grid gap-6 md:grid-cols-2">
-          <div className="space-y-4">
-            {etapasFlujo.slice(0, 3).map((etapa) => (
-              <div key={etapa.numero} className="flex flex-col sm:flex-row items-center gap-3 rounded-lg bg-white p-4 shadow-sm border border-slate-200">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-500 text-white font-bold">
-                  {etapa.numero}
-                </div>
-                <div className="flex-1 text-center sm:text-left">
-                  <h4 className="font-semibold text-slate-900">{etapa.nombre}</h4>
-                  <p className="text-sm text-slate-600">{etapa.descripcion}</p>
-                </div>
-                <div className="flex flex-col items-center gap-2">
-                  <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center">
-                    <QrCode className="h-8 w-8 text-gray-500" />
-                  </div>
-                  <p className="text-xs text-slate-500">{etapa.folio}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="space-y-4">
-            {etapasFlujo.slice(3).map((etapa) => (
-              <div key={etapa.numero} className="flex flex-col sm:flex-row items-center gap-3 rounded-lg bg-white p-4 shadow-sm border border-slate-200">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-500 text-white font-bold">
-                  {etapa.numero}
-                </div>
-                <div className="flex-1 text-center sm:text-left">
-                  <h4 className="font-semibold text-slate-900">{etapa.nombre}</h4>
-                  <p className="text-sm text-slate-600">{etapa.descripcion}</p>
-                </div>
-                <div className="flex flex-col items-center gap-2">
-                  <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center">
-                    <QrCode className="h-8 w-8 text-gray-500" />
-                  </div>
-                  <p className="text-xs text-slate-500">{etapa.folio}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="mt-6 animate-in fade-in rounded-xl bg-gradient-to-r from-sky-50 to-slate-50 p-5 shadow-lg duration-700 delay-500 border border-slate-200">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-500 shadow-md">
-              <QrCode className="h-5 w-5 text-white" />
-            </div>
-            <p className="font-semibold text-sky-700">
-              Cada etapa genera un folio único y código QR para trazabilidad completa. Escanea para ver detalles.
-            </p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-
-  const renderKPIs = () => (
-    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-      <Card className="group animate-in fade-in slide-in-from-left-4 border-2 border-sky-200 bg-gradient-to-br from-sky-50 to-white shadow-xl transition-all hover:scale-105 hover:shadow-2xl duration-500">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-semibold text-slate-600">Usuarios Totales</CardTitle>
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-500 shadow-lg transition-all group-hover:scale-110">
-            <User className="h-5 w-5 text-white" />
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="text-4xl font-bold text-sky-600">{KPIs.usuarios}</div>
-          <p className="mt-1 flex items-center gap-1 text-xs text-sky-600">
-            <TrendingUp className="h-3 w-3" />
-            +12% este mes
-          </p>
-        </CardContent>
-      </Card>
-
-      <Card className="group animate-in fade-in slide-in-from-left-4 border-2 border-slate-200 bg-gradient-to-br from-slate-50 to-white shadow-xl transition-all hover:scale-105 hover:shadow-2xl duration-500 delay-100">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-semibold text-slate-600">Documentos Activos</CardTitle>
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-500 shadow-lg transition-all group-hover:scale-110">
-            <FileText className="h-5 w-5 text-white" />
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="text-4xl font-bold text-sky-600">{KPIs.documentos}</div>
-          <p className="mt-1 flex items-center gap-1 text-xs text-sky-600">
-            <TrendingUp className="h-3 w-3" />
-            +28% este mes
-          </p>
-        </CardContent>
-      </Card>
-
-      <Card className="group animate-in fade-in slide-in-from-left-4 border-2 border-slate-200 bg-gradient-to-br from-slate-50 to-white shadow-xl transition-all hover:scale-105 hover:shadow-2xl duration-500 delay-200">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-semibold text-slate-600">Tiempo Promedio de Procesamiento</CardTitle>
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-500 shadow-lg transition-all group-hover:scale-110">
-            <Clock className="h-5 w-5 text-white" />
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="text-4xl font-bold text-sky-600">{KPIs.tiempo}</div>
-          <p className="mt-1 flex items-center gap-1 text-xs text-sky-600">
-            <TrendingUp className="h-3 w-3" />
-            -8% este mes
-          </p>
-        </CardContent>
-      </Card>
-
-      <Card className="group animate-in fade-in slide-in-from-left-4 border-2 border-slate-200 bg-gradient-to-br from-slate-50 to-white shadow-xl transition-all hover:scale-105 hover:shadow-2xl duration-500 delay-300">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-semibold text-slate-600">Tasa de Cumplimiento</CardTitle>
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-500 shadow-lg transition-all group-hover:scale-110">
-            <CheckCircle2 className="h-5 w-5 text-white" />
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="text-4xl font-bold text-sky-600">{KPIs.cumplimiento}</div>
-          <p className="mt-1 flex items-center gap-1 text-xs text-sky-600">
-            <TrendingUp className="h-3 w-3" />
-            +2% este mes
-          </p>
-        </CardContent>
-      </Card>
-    </div>
-  );
-
-  const renderReportes = () => (
     <Card className="animate-in fade-in slide-in-from-bottom-4 border-2 border-slate-200 shadow-slate-100 duration-700">
       <CardHeader className="bg-gradient-to-r from-slate-50 to-white">
         <CardTitle className="flex items-center gap-3 text-2xl text-slate-900">
-          <FileTextIcon className="h-6 w-6" />
-          Gestión de Reportes
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-800 shadow-lg">
+            <FileTextIcon className="h-6 w-6 text-white" />
+          </div>
+          Gestión de Flujos de Documentos
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6">
@@ -337,8 +211,129 @@ export default function AdministradorPanel() {
           <div className="flex justify-center py-8">
             <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
           </div>
+        ) : error ? (
+          <p className="text-red-500 text-center">{error}</p>
+        ) : etapasFlujo.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-slate-500 mb-4">No hay flujos disponibles.</p>
+            <Button variant="outline">Crear Flujo</Button>
+          </div>
         ) : (
-          <div className="w-full overflow-x-auto">  {/* ← Full responsive */}
+          <div className="space-y-4">
+            {etapasFlujo.map((etapa: any) => (
+              <Card key={etapa.id} className="border-slate-200">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500">
+                      <FileTextIcon className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-slate-900">{etapa.nombre}</h3>
+                      <p className="text-sm text-slate-500">{etapa.descripcion}</p>
+                      <p className="text-xs text-slate-400">Folio: {etapa.folio} | Etapa: {etapa.etapa}</p>
+                    </div>
+                    <Badge variant="secondary" className="bg-blue-100 text-blue-800">{etapa.status}</Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+
+  const renderKPIs = () => (
+    <Card className="animate-in fade-in slide-in-from-bottom-4 border-2 border-slate-200 shadow-slate-100 duration-700">
+      <CardHeader className="bg-gradient-to-r from-slate-50 to-white">
+        <CardTitle className="flex items-center gap-3 text-2xl text-slate-900">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-800 shadow-lg">
+            <TrendingUp className="h-6 w-6 text-white" />
+          </div>
+          KPIs Globales
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card className="border-slate-200 hover:shadow-md transition-shadow">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-sky-500">
+                <User className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <p className="text-3xl font-bold text-slate-900">{kpis.usuarios}</p>
+                <p className="text-sm text-slate-500">Usuarios Totales</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-slate-200 hover:shadow-md transition-shadow">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500">
+                <FileTextIcon className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <p className="text-3xl font-bold text-slate-900">{kpis.documentos}</p>
+                <p className="text-sm text-slate-500">Documentos Procesados</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-slate-200 hover:shadow-md transition-shadow">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-500">
+                <Clock className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <p className="text-3xl font-bold text-slate-900">{kpis.tiempo}</p>
+                <p className="text-sm text-slate-500">Tiempo Promedio</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-slate-200 hover:shadow-md transition-shadow">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-500">
+                <CheckCircle2 className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <p className="text-3xl font-bold text-slate-900">{kpis.cumplimiento}</p>
+                <p className="text-sm text-slate-500">Cumplimiento</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </CardContent>
+    </Card>
+  );
+
+  const renderReportes = () => (
+    <Card className="animate-in fade-in slide-in-from-bottom-4 border-2 border-slate-200 shadow-slate-100 duration-700">
+      <CardHeader className="bg-gradient-to-r from-slate-50 to-white">
+        <CardTitle className="flex items-center gap-3 text-2xl text-slate-900">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-800 shadow-lg">
+            <FileText className="h-6 w-6 text-white" />
+          </div>
+          Reportes Generados
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-6">
+        {loading ? (
+          <div className="flex justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
+          </div>
+        ) : error ? (
+          <p className="text-red-500 text-center">{error}</p>
+        ) : reportes.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-slate-500 mb-4">No hay reportes disponibles.</p>
+            <Button variant="outline">Crear Reporte</Button>
+          </div>
+        ) : (
+          <div className="w-full overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -351,19 +346,19 @@ export default function AdministradorPanel() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {reportes.map((reporte) => (
-                  <TableRow key={reporte.id} className="hover:bg-slate-50">
-                    <TableCell>{reporte.id}</TableCell>
-                    <TableCell className="font-medium text-slate-900">{reporte.titulo}</TableCell>
-                    <TableCell>{reporte.fecha}</TableCell>
+                {reportes.map((r: any) => (
+                  <TableRow key={r.id} className="hover:bg-slate-50">
+                    <TableCell>{r.id}</TableCell>
+                    <TableCell className="font-medium text-slate-900">{r.titulo}</TableCell>
+                    <TableCell>{r.fecha}</TableCell>
                     <TableCell>
                       <Badge variant="secondary" className="bg-slate-100 text-slate-800">
-                        {reporte.tipo}
+                        {r.tipo}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={reporte.estado === "Generado" ? "default" : "secondary"} className="bg-sky-100 text-sky-800">
-                        {reporte.estado}
+                      <Badge variant={r.status === "generado" ? "default" : "secondary"} className="bg-green-100 text-green-800">
+                        {r.status}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -418,7 +413,7 @@ export default function AdministradorPanel() {
             <div>
               <p className="font-semibold text-sky-700">Sistema Operando Normalmente</p>
               <p className="text-sm text-slate-600">
-                Último backup: 2025-10-29 12:00 PM | Integraciones activas: 3
+                Último backup: Cargando... | Integraciones activas: 0
               </p>
             </div>
           </div>

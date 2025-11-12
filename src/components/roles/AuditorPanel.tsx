@@ -30,74 +30,32 @@ const sidebarItems = [
   { label: "Bitácora Global", href: "/auditor/bitacora", icon: "📋" },
 ];
 
-// Datos hardcodeados, pero con loader simulado
-const initialHistorial = [
-  {
-    id: "COM-202501-0001",
-    tipo: "Compra",
-    estado: "Aprobado",
-    tiempo: "2 días",
-    fecha: "2025-01-08",
-    qr: "COM-202501-0001",
-  },
-  {
-    id: "REM-202501-0002",
-    tipo: "Reembolso",
-    estado: "Aprobado",
-    tiempo: "1 día",
-    fecha: "2025-01-05",
-    qr: "REM-202501-0002",
-  },
-  {
-    id: "VAC-202501-0003",
-    tipo: "Vacaciones",
-    estado: "Rechazado",
-    tiempo: "3 días",
-    fecha: "2025-01-10",
-    qr: "VAC-202501-0003",
-  },
-  {
-    id: "PER-202501-0004",
-    tipo: "Permiso",
-    estado: "Aprobado",
-    tiempo: "1 día",
-    fecha: "2025-01-07",
-    qr: "PER-202501-0004",
-  },
-];
-
-const tiempoCicloData = [
-  { mes: "Sep", dias: 2.3 },
-  { mes: "Oct", dias: 2.1 },
-  { mes: "Nov", dias: 1.9 },
-  { mes: "Dic", dias: 2.0 },
-  { mes: "Ene", dias: 1.8 },
-];
-
-const rechazosData = [
-  { mes: "Sep", porcentaje: 15 },
-  { mes: "Oct", porcentaje: 12 },
-  { mes: "Nov", porcentaje: 10 },
-  { mes: "Dic", porcentaje: 9 },
-  { mes: "Ene", porcentaje: 12 },
-];
+// Datos hardcodeados REMOVIDOS: Ahora estados vacíos para fetch dinámico
+// const initialHistorial = [...] ← BORRADO
+// const tiempoCicloData = [...] ← BORRADO
+// const rechazosData = [...] ← BORRADO
 
 export default function AuditorPanel() {
   const [currentSection, setCurrentSection] = useState("kpis");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);  // ← NUEVO: Mobile sidebar
-  const [historial, setHistorial] = useState(initialHistorial);  // ← Con setter pa' loader
+  const [historial, setHistorial] = useState([]);  // ← VACÍO: Espera API
+  const [tiempoData, setTiempoData] = useState([]);  // ← VACÍO para gráficos
+  const [rechazosData, setRechazosData] = useState([]);  // ← VACÍO para gráficos
   const [loading, setLoading] = useState(true);  // ← NUEVO: Loader
   const [error, setError] = useState<string | null>(null);
 
-  // ← NUEVO: Fetch simulado pa' datos
+  // ← NUEVO: Fetch simulado REMOVIDO: Ahora genérico para API real
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       setError(null);
       try {
-        await new Promise(resolve => setTimeout(resolve, 1500));  // Simula API
-        setHistorial(initialHistorial);
-        console.log("Datos de auditor cargados (simulado)");
+        // ← AGREGAR AQUÍ: await axios.get('/api/auditor/historial'); setHistorial(res.data);
+        // Por ahora, placeholders vacíos
+        setHistorial([]);  // ← VACÍO hasta API
+        setTiempoData([]);  // ← VACÍO
+        setRechazosData([]);  // ← VACÍO
+        console.log("Datos de auditor cargados (listo para API real)");
       } catch (err) {
         setError("Error al cargar datos: " + (err as Error).message);
       } finally {
@@ -121,15 +79,15 @@ export default function AuditorPanel() {
   };
 
   const handleExportPDF = () => {
-    alert("Generando reporte PDF con códigos QR...");
+    alert("Generando reporte PDF con códigos QR...");  // ← En real: API o jsPDF
   };
 
   const handleExportExcel = () => {
-    alert("Exportando datos a Excel...");
+    alert("Exportando datos a Excel...");  // ← En real: API
   };
 
   const handleExportCSV = () => {
-    alert("Exportando datos a CSV...");
+    alert("Exportando datos a CSV...");  // ← En real: API
   };
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
@@ -142,8 +100,8 @@ export default function AuditorPanel() {
           <TrendingUp className="h-4 w-4 text-[#3B82F6]" />
         </CardHeader>
         <CardContent>
-          <div className="text-3xl font-bold text-[#10B981]">1.8 días</div>
-          <p className="text-xs text-gray-500">-15% vs mes anterior</p>
+          <div className="text-3xl font-bold text-[#10B981]">0 días</div>  // ← DINÁMICO (de API)
+          <p className="text-xs text-gray-500">Sin datos aún</p>  // ← PLACEHOLDER
         </CardContent>
       </Card>
 
@@ -153,8 +111,8 @@ export default function AuditorPanel() {
           <BarChart3 className="h-4 w-4 text-[#3B82F6]" />
         </CardHeader>
         <CardContent>
-          <div className="text-3xl font-bold text-[#10B981]">12%</div>
-          <p className="text-xs text-gray-500">+3% vs mes anterior</p>
+          <div className="text-3xl font-bold text-[#10B981]">0%</div>  // ← DINÁMICO
+          <p className="text-xs text-gray-500">Sin datos aún</p>
         </CardContent>
       </Card>
 
@@ -164,27 +122,31 @@ export default function AuditorPanel() {
           <FileText className="h-4 w-4 text-[#3B82F6]" />
         </CardHeader>
         <CardContent>
-          <div className="text-3xl font-bold text-[#10B981]">456</div>
-          <p className="text-xs text-gray-500">+5% vs mes anterior</p>
+          <div className="text-3xl font-bold text-[#10B981]">0</div>  // ← DINÁMICO
+          <p className="text-xs text-gray-500">Sin datos aún</p>
         </CardContent>
       </Card>
 
-      {/* Gráficos */}
+      {/* Gráficos: Si vacío, placeholder */}
       <Card className="md:col-span-3">
         <CardHeader>
           <CardTitle>Tendencias de Tiempo de Ciclo</CardTitle>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={tiempoCicloData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="mes" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="dias" stroke="#10B981" strokeWidth={3} />
-            </LineChart>
-          </ResponsiveContainer>
+          {tiempoData.length === 0 ? (
+            <p className="text-center text-slate-500 py-8">No hay datos para mostrar en el gráfico.</p>  // ← NUEVO: Placeholder
+          ) : (
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={tiempoData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="mes" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="dias" stroke="#10B981" strokeWidth={3} />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
         </CardContent>
       </Card>
     </div>
@@ -222,16 +184,20 @@ export default function AuditorPanel() {
           </div>
         </div>
 
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={rechazosData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="mes" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Bar dataKey="porcentaje" fill="#3B82F6" />
-          </BarChart>
-        </ResponsiveContainer>
+        {rechazosData.length === 0 ? (
+          <p className="text-center text-slate-500 py-8">No hay datos para el gráfico de rechazos.</p>  // ← NUEVO: Placeholder
+        ) : (
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={rechazosData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="mes" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="porcentaje" fill="#3B82F6" />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
       </CardContent>
     </Card>
   );
@@ -277,34 +243,41 @@ export default function AuditorPanel() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="w-full overflow-x-auto">  {/* ← FIX: Responsive scroll */}
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Folio</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead>Tiempo</TableHead>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead>QR</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {historial.map((doc) => (
-                    <TableRow key={doc.id} className="hover:bg-gray-50 transition-colors">
-                      <TableCell className="font-medium">{doc.id}</TableCell>
-                      <TableCell>{doc.tipo}</TableCell>
-                      <TableCell>{doc.estado}</TableCell>
-                      <TableCell>{doc.tiempo}</TableCell>
-                      <TableCell>{doc.fecha}</TableCell>
-                      <TableCell>
-                        <QRGenerator value={generateQRData(doc.qr, doc.tipo, doc.fecha)} size={48} />
-                      </TableCell>
+            {historial.length === 0 ? (  // ← NUEVO: Mensaje vacío
+              <div className="text-center py-8">
+                <p className="text-slate-500 mb-4">Bitácora vacía. ¡Primer día auditando!</p>
+                <Button onClick={() => { /* Recargar */ }} variant="outline">Actualizar</Button>
+              </div>
+            ) : (
+              <div className="w-full overflow-x-auto">  {/* ← FIX: Responsive scroll */}
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Folio</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Estado</TableHead>
+                      <TableHead>Tiempo</TableHead>
+                      <TableHead>Fecha</TableHead>
+                      <TableHead>QR</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {historial.map((doc: any) => (
+                      <TableRow key={doc.id} className="hover:bg-gray-50 transition-colors">
+                        <TableCell className="font-medium">{doc.id || 'Sin folio'}</TableCell>
+                        <TableCell>{doc.tipo || 'Sin tipo'}</TableCell>
+                        <TableCell>{doc.estado || 'Sin estado'}</TableCell>
+                        <TableCell>{doc.tiempo || 'Sin tiempo'}</TableCell>
+                        <TableCell>{doc.fecha || 'Sin fecha'}</TableCell>
+                        <TableCell>
+                          <QRGenerator value={generateQRData(doc.qr || 'Sin QR', doc.tipo || '', doc.fecha || '')} size={48} />
+                        </TableCell>
+                      </TableRow>
+                    )) || <TableRow><TableCell colSpan={6} className="text-center text-slate-500">Sin bitácora</TableCell></TableRow>}  // ← FALLBACK
+                  </TableBody>
+                </Table>
+              </div>
+            )}
           </>
         )}
       </CardContent>

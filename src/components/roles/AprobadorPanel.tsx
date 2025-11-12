@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { cn } from "@/lib/utils";  // ← Agregado: Para clases condicionales
+import axios from "axios";
+import { cn } from "@/lib/utils";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { DashboardSidebar } from "@/components/dashboard-sidebar";
 import { DashboardFooter } from "@/components/dashboard-footer";
@@ -9,8 +10,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { CheckCircle, XCircle, Clock, MessageSquare, QrCode, Loader2 } from "lucide-react";  // ← Agregado Loader2
-import { QRGenerator } from "@/components/qr-generator";
+import { CheckCircle, XCircle, MessageSquare, Loader2, Bell } from "lucide-react";
+
+const API_BASE = "http://127.0.0.1:8000/api";
 
 const sidebarItems = [
   { label: "Pendientes", href: "/aprobador", icon: "⏳" },
@@ -18,98 +20,47 @@ const sidebarItems = [
   { label: "Notificaciones", href: "/aprobador/notificaciones", icon: "🔔" },
 ];
 
-// Datos hardcodeados, pero con loader simulado
-const initialPendientes = [
-  {
-    id: "COM-202501-0001",
-    creador: "Juan Pérez",
-    tipo: "Solicitud de Compra",
-    estado: "Pendiente",
-    fecha: "2025-01-08",
-    contenido: "Solicitud de compra de 10 laptops para el departamento de TI",
-  },
-  {
-    id: "VAC-202501-0003",
-    creador: "María García",
-    tipo: "Vacaciones",
-    estado: "Pendiente",
-    fecha: "2025-01-10",
-    contenido: "Solicitud de vacaciones del 15 al 30 de enero",
-  },
-  {
-    id: "REM-202501-0005",
-    creador: "Carlos López",
-    tipo: "Reembolso",
-    estado: "Pendiente",
-    fecha: "2025-01-09",
-    contenido: "Reembolso de gastos de viaje por $2,500 MXN",
-  },
-];
-
-const initialHistorial = [
-  {
-    id: "COM-202501-0002",
-    creador: "Ana Martínez",
-    tipo: "Compra",
-    decision: "Aprobado",
-    fecha: "2025-01-07",
-    qrPreliminar: "COM-202501-0002-PRELIM",
-  },
-  {
-    id: "REM-202501-0001",
-    creador: "Pedro Sánchez",
-    tipo: "Reembolso",
-    decision: "Aprobado",
-    fecha: "2025-01-06",
-    qrPreliminar: "REM-202501-0001-PRELIM",
-  },
-  {
-    id: "VAC-202501-0002",
-    creador: "Laura Gómez",
-    tipo: "Vacaciones",
-    decision: "Rechazado",
-    fecha: "2025-01-05",
-    qrPreliminar: "VAC-202501-0002-PRELIM",
-  },
-];
-
-const initialBitacora = [
-  { fecha: "2025-01-08 10:30", accion: "Documento creado", usuario: "Juan Pérez" },
-  { fecha: "2025-01-08 11:15", accion: "Enviado a revisión", usuario: "Sistema" },
-  { fecha: "2025-01-08 14:20", accion: "Asignado a aprobador", usuario: "Sistema" },
-];
-
 export default function AprobadorPanel() {
-  const [currentSection, setCurrentSection] = useState("pendientes");
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);  // ← NUEVO: Mobile sidebar
-  const [comentario, setComentario] = useState("");
-  const [selectedDoc, setSelectedDoc] = useState<string | null>(null);
-  const [viewingDoc, setViewingDoc] = useState<typeof initialPendientes[0] | null>(null);
-  const [pendientes, setPendientes] = useState(initialPendientes);  // ← Con setter pa' loader
-  const [historial, setHistorial] = useState(initialHistorial);  // ← Con setter
-  const [bitacora, setBitacora] = useState(initialBitacora);  // ← Con setter
-  const [loading, setLoading] = useState(true);  // ← NUEVO: Loader
+  const [currentSection, setCurrentSection] = useState<string>("pendientes");
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
+  const [comentario, setComentario] = useState<string>("");
+  const [selectedDoc, setSelectedDoc] = useState<number | null>(null);
+  const [pendientes, setPendientes] = useState<any[]>([]);
+  const [historial, setHistorial] = useState<any[]>([]);
+  const [bitacora, setBitacora] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // ← NUEVO: Fetch simulado pa' datos
+  const token = localStorage.getItem("token");
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       setError(null);
       try {
-        await new Promise(resolve => setTimeout(resolve, 1500));  // Simula API
-        setPendientes(initialPendientes);
-        setHistorial(initialHistorial);
-        setBitacora(initialBitacora);
-        console.log("Datos de aprobador cargados (simulado)");
+        if (!token) throw new Error("No token");
+        const headers = { Authorization: `Token ${token}` };
+        const [pendientesRes, historialRes, bitacoraRes] = await Promise.all([
+          axios.get(`${API_BASE}/aprobador/pendientes/`, { headers }),
+          axios.get(`${API_BASE}/aprobador/historial/`, { headers }),
+          axios.get(`${API_BASE}/aprobador/bitacora/`, { headers })
+        ]);
+        setPendientes(pendientesRes.data);
+        setHistorial(historialRes.data);
+        setBitacora(bitacoraRes.data);
+        console.log("Datos de aprobador cargados!");
       } catch (err) {
         setError("Error al cargar datos: " + (err as Error).message);
+        console.error(err);
+        setPendientes([]);  // Fallback
+        setHistorial([]);
+        setBitacora([]);
       } finally {
         setLoading(false);
       }
     };
-    fetchData();
-  }, []);
+    if (token) fetchData();
+  }, [token]);
 
   const sectionMap: Record<string, string> = {
     "Pendientes": "pendientes",
@@ -119,149 +70,102 @@ export default function AprobadorPanel() {
 
   const handleSectionChange = (label: string, e: React.MouseEvent) => {
     e.preventDefault();
-    const section = sectionMap[label] || "pendientes";
-    setCurrentSection(section);
-    if (window.innerWidth < 1024) setIsSidebarOpen(false);  // ← Cierra sidebar en mobile
+    setCurrentSection(sectionMap[label]);
+    if (window.innerWidth < 1024) setIsSidebarOpen(false);
   };
 
-  const handleAprobar = (id: string) => {
-    if (!comentario.trim()) {
-      alert("Por favor agrega un comentario antes de aprobar");
+  const handleApprove = async (id: number) => {
+    try {
+      const headers = { Authorization: `Token ${token}` };
+      await axios.patch(`${API_BASE}/aprobador/tramite/${id}/approve/`, { comentario }, { headers });
+      alert("Aprobado!");
+      setComentario("");
+      window.location.reload();
+    } catch (err) {
+      alert("Error al aprobar: " + (err as Error).message);
+    }
+  };
+
+  const handleReject = async (id: number) => {
+    if (!comentario) {
+      alert("Agrega un comentario para rechazar");
       return;
     }
-    alert(`Documento ${id} aprobado con comentario: ${comentario}`);
-    setComentario("");
-    setSelectedDoc(null);
-    setViewingDoc(null);
-  };
-
-  const handleRechazar = (id: string) => {
-    if (!comentario.trim()) {
-      alert("Por favor agrega un comentario explicando el rechazo");
-      return;
+    try {
+      const headers = { Authorization: `Token ${token}` };
+      await axios.patch(`${API_BASE}/aprobador/tramite/${id}/reject/`, { comentario }, { headers });
+      alert("Rechazado!");
+      setComentario("");
+      window.location.reload();
+    } catch (err) {
+      alert("Error al rechazar: " + (err as Error).message);
     }
-    alert(`Documento ${id} rechazado con comentario: ${comentario}`);
-    setComentario("");
-    setSelectedDoc(null);
-    setViewingDoc(null);
   };
 
-  const handleComentar = (id: string) => {
-    if (!comentario.trim()) {
-      alert("Por favor escribe un comentario");
-      return;
-    }
-    alert(`Comentario agregado al documento ${id}: ${comentario}`);
-    setComentario("");
-  };
-
-  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
   const renderPendientes = () => (
-    <Card className="shadow-lg">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-2xl text-[#10B981]">
-          <Clock className="h-6 w-6" />
-          Documentos Pendientes de Aprobación
-        </CardTitle>
+    <Card className="animate-in fade-in slide-in-from-bottom-4 border-2 border-blue-200 shadow-xl duration-700">
+      <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100">
+        <CardTitle className="text-2xl text-blue-600">Trámites Pendientes</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-6">
         {loading ? (
           <div className="flex justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-green-500" />
+            <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
           </div>
         ) : error ? (
           <p className="text-red-500 text-center">{error}</p>
+        ) : pendientes.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-slate-500 mb-4">No hay trámites pendientes.</p>
+            <Button variant="outline" onClick={() => window.location.reload()}>Actualizar</Button>
+          </div>
         ) : (
-          <div className="w-full overflow-x-auto">  {/* ← FIX: Responsive scroll */}
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Folio</TableHead>
-                  <TableHead>Creador</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Fecha</TableHead>
-                  <TableHead>Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {pendientes.map((doc) => (
-                  <TableRow key={doc.id} className="hover:bg-gray-50">
-                    <TableCell className="font-medium">{doc.id}</TableCell>
-                    <TableCell>{doc.creador}</TableCell>
-                    <TableCell>{doc.tipo}</TableCell>
-                    <TableCell>{doc.fecha}</TableCell>
-                    <TableCell>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="mr-2"
-                        onClick={() => {
-                          setSelectedDoc(doc.id);
-                          setViewingDoc(doc);
-                        }}
-                      >
-                        Ver Detalles
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-
-            {viewingDoc && (
-              <Card className="mt-6">
-                <CardHeader>
-                  <CardTitle className="text-lg">{viewingDoc.tipo} - {viewingDoc.id}</CardTitle>
+          <div className="space-y-4">
+            {pendientes.map((tramite: any) => (
+              <Card key={tramite.id} className="border-blue-200">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle className="text-lg">{tramite.titulo}</CardTitle>
+                  <Badge variant="secondary">{tramite.tipo}</Badge>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label>Creador</Label>
-                    <p className="text-gray-700">{viewingDoc.creador}</p>
-                  </div>
-                  <div>
-                    <Label>Fecha</Label>
-                    <p className="text-gray-700">{viewingDoc.fecha}</p>
-                  </div>
-                  <div>
-                    <Label>Contenido</Label>
-                    <p className="text-gray-700 whitespace-pre-wrap">{viewingDoc.contenido}</p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Comentario</Label>
-                    <Textarea
-                      value={comentario}
-                      onChange={(e) => setComentario(e.target.value)}
-                      placeholder="Agrega tu comentario..."
-                      className="min-h-[80px]"
-                    />
-                  </div>
-                  {selectedDoc === viewingDoc.id ? (
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      <Button
-                        className="flex-1 bg-[#10B981] hover:bg-[#059669]"
-                        onClick={() => handleAprobar(selectedDoc)}
-                      >
-                        <CheckCircle className="mr-2 h-4 w-4" />
-                        Confirmar Aprobación
-                      </Button>
-                      <Button className="flex-1" variant="destructive" onClick={() => handleRechazar(selectedDoc)}>
-                        <XCircle className="mr-2 h-4 w-4" />
-                        Confirmar Rechazo
-                      </Button>
-                    </div>
-                  ) : (
-                    <Button
-                      className="w-full bg-[#3B82F6] hover:bg-[#2563EB]"
-                      onClick={() => handleComentar(viewingDoc.id)}
-                    >
+                <CardContent className="p-4">
+                  <p className="text-sm text-gray-500 mb-4">{tramite.descripcion}</p>
+                  <div className="flex flex-col sm:flex-row gap-2 justify-end">
+                    <Button variant="outline" onClick={() => setSelectedDoc(tramite.id)} className="flex-1 sm:flex-none">
                       <MessageSquare className="mr-2 h-4 w-4" />
-                      Agregar Comentario
+                      Comentar
                     </Button>
+                    <Button onClick={() => handleApprove(tramite.id)} className="bg-green-500 hover:bg-green-600 flex-1 sm:flex-none">
+                      <CheckCircle className="mr-2 h-4 w-4" />
+                      Aprobar
+                    </Button>
+                    <Button onClick={() => handleReject(tramite.id)} variant="destructive" className="flex-1 sm:flex-none">
+                      <XCircle className="mr-2 h-4 w-4" />
+                      Rechazar
+                    </Button>
+                  </div>
+                  {selectedDoc === tramite.id && (
+                    <div className="mt-4">
+                      <Label htmlFor="comentario">Comentario (opcional)</Label>
+                      <Textarea
+                        id="comentario"
+                        value={comentario}
+                        onChange={(e) => setComentario(e.target.value)}
+                        placeholder="Agrega comentarios..."
+                      />
+                      <div className="flex gap-2 mt-2">
+                        <Button onClick={() => setSelectedDoc(null)} variant="outline">
+                          Cancelar
+                        </Button>
+                        <Button onClick={() => handleApprove(tramite.id)}>
+                          Confirmar
+                        </Button>
+                      </div>
+                    </div>
                   )}
                 </CardContent>
               </Card>
-            )}
+            ))}
           </div>
         )}
       </CardContent>
@@ -269,48 +173,44 @@ export default function AprobadorPanel() {
   );
 
   const renderHistorial = () => (
-    <Card className="shadow-lg">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-2xl text-[#3B82F6]">
-          <QrCode className="h-6 w-6" />
-          Historial de Documentos Revisados
-        </CardTitle>
+    <Card className="animate-in fade-in slide-in-from-bottom-4 border-2 border-green-200 shadow-xl duration-700">
+      <CardHeader className="bg-gradient-to-r from-green-50 to-green-100">
+        <CardTitle className="text-2xl text-green-600">Historial de Trámites</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-6">
         {loading ? (
           <div className="flex justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+            <Loader2 className="h-8 w-8 animate-spin text-green-500" />
           </div>
         ) : error ? (
           <p className="text-red-500 text-center">{error}</p>
+        ) : historial.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-slate-500 mb-4">No hay historial.</p>
+            <Button variant="outline">Actualizar</Button>
+          </div>
         ) : (
-          <div className="w-full overflow-x-auto">  {/* ← FIX: Responsive scroll */}
+          <div className="w-full overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Folio</TableHead>
-                  <TableHead>Creador</TableHead>
+                  <TableHead>Título</TableHead>
                   <TableHead>Tipo</TableHead>
-                  <TableHead>Decisión</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead>Solicitante</TableHead>
                   <TableHead>Fecha</TableHead>
-                  <TableHead>QR Preliminar</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {historial.map((doc) => (
-                  <TableRow key={doc.id} className="hover:bg-gray-50 transition-colors">
-                    <TableCell className="font-medium">{doc.id}</TableCell>
-                    <TableCell>{doc.creador}</TableCell>
-                    <TableCell>{doc.tipo}</TableCell>
-                    <TableCell>
-                      <Badge variant={doc.decision === "Aprobado" ? "default" : "destructive"}>
-                        {doc.decision}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{doc.fecha}</TableCell>
-                    <TableCell>
-                      <QRGenerator value={doc.qrPreliminar} size={48} />
-                    </TableCell>
+                {historial.map((tramite: any) => (
+                  <TableRow key={tramite.id}>
+                    <TableCell className="font-mono">{tramite.folio}</TableCell>
+                    <TableCell className="font-medium">{tramite.titulo}</TableCell>
+                    <TableCell><Badge variant="secondary">{tramite.tipo}</Badge></TableCell>
+                    <TableCell><Badge variant="default">{tramite.estado}</Badge></TableCell>
+                    <TableCell>{tramite.solicitante}</TableCell>
+                    <TableCell>{tramite.fecha}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -322,25 +222,33 @@ export default function AprobadorPanel() {
   );
 
   const renderNotificaciones = () => (
-    <Card className="shadow-lg">
-      <CardHeader>
-        <CardTitle className="text-xl text-[#10B981]">Bitácora de Actividades</CardTitle>
+    <Card className="animate-in fade-in slide-in-from-bottom-4 border-2 border-yellow-200 shadow-xl duration-700">
+      <CardHeader className="bg-gradient-to-r from-yellow-50 to-yellow-100">
+        <CardTitle className="flex items-center gap-2 text-2xl text-orange-600">
+          <Bell className="h-6 w-6" />
+          Notificaciones
+        </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-6 space-y-4">
         {loading ? (
           <div className="flex justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-green-500" />
+            <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
           </div>
         ) : error ? (
           <p className="text-red-500 text-center">{error}</p>
+        ) : bitacora.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-slate-500 mb-4">Sin notificaciones.</p>
+            <Button variant="outline">Actualizar</Button>
+          </div>
         ) : (
           <div className="space-y-3">
-            {bitacora.map((entry, index) => (
-              <div key={index} className="flex flex-col sm:flex-row items-start gap-3 border-l-2 border-[#3B82F6] pl-4">
+            {bitacora.map((entry: any) => (
+              <div key={entry.id} className="flex flex-col sm:flex-row items-start gap-3 border-l-2 border-orange-500 pl-4">
                 <div className="flex-1">
-                  <p className="font-medium text-gray-900">{entry.accion}</p>
-                  <p className="text-sm text-gray-600">
-                    {entry.usuario} - {entry.fecha}
+                  <p className="font-medium text-gray-900">{entry.action}</p>
+                  <p className="text-sm text-gray-500">
+                    {entry.user} - {entry.time}
                   </p>
                 </div>
               </div>
@@ -365,22 +273,22 @@ export default function AprobadorPanel() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <DashboardHeader userName="Aprobador" role="Rol: Aprobador" onMenuToggle={toggleSidebar} /> {/* ← Agregado onMenuToggle */}
+    <div className="flex min-h-screen flex-col bg-gradient-to-br from-blue-50 via-white to-blue-50/20">
+      <DashboardHeader userName="Aprobador" role="Rol: Aprobador" onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
       <div className="flex flex-1">
         <DashboardSidebar 
-          items={sidebarItems.map((item,) => ({
+          items={sidebarItems.map((item) => ({
             ...item,
-            onClick: (e: React.MouseEvent) => handleSectionChange(item.label, e)
+            onClick: (e) => handleSectionChange(item.label, e)
           }))} 
           isOpen={isSidebarOpen}
-          onClose={() => setIsSidebarOpen(false)}  // ← Agregado pa' mobile
+          onClose={() => setIsSidebarOpen(false)}
         />
-        <main className={cn(  // ← Usando cn pa' responsive
-          "flex-1 bg-gray-50 transition-all duration-300 p-2 sm:p-4 lg:p-6 overflow-y-auto w-full",
+        <main className={cn(
+          "flex-1 transition-all duration-300 p-2 sm:p-4 lg:p-6 overflow-y-auto w-full",
           isSidebarOpen ? "lg:ml-0 ml-0" : "ml-0"
         )}>
-          <div className="mx-auto max-w-6xl space-y-6 w-full"> {/* ← w-full pa' expandir */}
+          <div className="mx-auto max-w-6xl space-y-6 w-full">
             {renderSection()}
           </div>
         </main>

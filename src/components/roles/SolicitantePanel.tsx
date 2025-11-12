@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { cn } from "@/lib/utils";  // ← Agregado: Para clases condicionales
+import axios from "axios";
+import { useNavigate } from "react-router-dom";  // ← AGREGADO: Para navigate
+import { cn } from "@/lib/utils";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { DashboardSidebar } from "@/components/dashboard-sidebar";
 import { DashboardFooter } from "@/components/dashboard-footer";
@@ -12,9 +14,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { FileText, Save, Send, Bell, CheckCircle2, Loader2 } from "lucide-react";  // ← Agregado Loader2
+import { FileText, Save, Send, Bell, CheckCircle2, Loader2 } from "lucide-react";
 import { QRGenerator } from "@/components/qr-generator";
 import { generateFolio, generateQRData } from "@/lib/folio-generator";
+
+const API_BASE = "http://127.0.0.1:8000/api";
 
 const sidebarItems = [
   { label: "Crear Trámite", href: "/solicitante", icon: "➕" },
@@ -22,62 +26,58 @@ const sidebarItems = [
   { label: "Notificaciones", href: "/solicitante/notificaciones", icon: "🔔" },
 ];
 
-// Datos hardcodeados, pero con loader simulado
-const initialTramites = [
-  {
-    id: "COM-202501-0001",
-    tipo: "Solicitud de Compra",
-    estado: "En Revisión",
-    fecha: "2025-01-08",
-    qr: "COM-202501-0001",
-  },
-  { id: "REM-202501-0002", tipo: "Reembolso", estado: "Aprobado", fecha: "2025-01-05", qr: "REM-202501-0002" },
-  { id: "VAC-202501-0003", tipo: "Vacaciones", estado: "Pendiente", fecha: "2025-01-10", qr: "VAC-202501-0003" },
-];
-
-const initialNotificaciones = [
-  { id: 1, mensaje: "Tu solicitud COM-202501-0001 está en revisión", tipo: "info", folio: "COM-202501-0001" },
-  { id: 2, mensaje: "Tu reembolso REM-202501-0002 fue aprobado", tipo: "success", folio: "REM-202501-0002" },
-  {
-    id: 3,
-    mensaje: "Tu solicitud VAC-202501-0003 requiere información adicional",
-    tipo: "warning",
-    folio: "VAC-202501-0003",
-  },
-];
-
 export default function SolicitantePanel() {
+  const navigate = useNavigate();  // ← AGREGADO: Para redirect
   const [currentSection, setCurrentSection] = useState("crear");
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);  // ← NUEVO: Mobile sidebar
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [titulo, setTitulo] = useState("");
   const [tipo, setTipo] = useState("");
   const [contenido, setContenido] = useState("");
   const [folio, setFolio] = useState("");
   const [qrData, setQrData] = useState("");
   const [showQR, setShowQR] = useState(false);
-  const [tramites, setTramites] = useState(initialTramites);  // ← Con setter pa' loader
-  const [notificaciones, setNotificaciones] = useState(initialNotificaciones);  // ← Con setter
-  const [loading, setLoading] = useState(true);  // ← NUEVO: Loader
+  const [file, setFile] = useState<File | null>(null);
+  const [tramites, setTramites] = useState([]);
+  const [notificaciones, setNotificaciones] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // ← NUEVO: Fetch simulado pa' datos
+  const token = localStorage.getItem("token");
+  const role = localStorage.getItem("role");  // ← AGREGADO: Role del localStorage
+
+  // ← AGREGADO: Role Check + Redirect
+  useEffect(() => {
+    if (role !== 'solicitante') {
+      alert("Acceso denegado – solo para solicitantes");
+      navigate("/");  // ← FIX: Redirect a home si wrong role
+    }
+  }, [role, navigate]);
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       setError(null);
       try {
-        await new Promise(resolve => setTimeout(resolve, 1500));  // Simula API
-        setTramites(initialTramites);
-        setNotificaciones(initialNotificaciones);
-        console.log("Datos de solicitante cargados (simulado)");
+        if (!token) throw new Error("No token");
+        const headers = { Authorization: `Token ${token}` };
+        const [tramitesRes, notifRes] = await Promise.all([
+          axios.get(`${API_BASE}/solicitante/tramites/`, { headers }),
+          axios.get(`${API_BASE}/solicitante/notificaciones/`, { headers })
+        ]);
+        setTramites(tramitesRes.data);
+        setNotificaciones(notifRes.data);
+        console.log("Datos de solicitante cargados!");
       } catch (err) {
-        setError("Error al cargar datos: " + (err as Error).message);
+        setError("Error al cargar: " + (err as Error).message);
+        console.error(err);
+        setTramites([]);
+        setNotificaciones([]);
       } finally {
         setLoading(false);
       }
     };
-    fetchData();
-  }, []);
+    if (token && role === 'solicitante') fetchData();  // ← FIX: Solo si role correcto
+  }, [token, role]);
 
   const sectionMap: Record<string, string> = {
     "Crear Trámite": "crear",
@@ -89,7 +89,7 @@ export default function SolicitantePanel() {
     e.preventDefault();
     const section = sectionMap[label] || "crear";
     setCurrentSection(section);
-    if (window.innerWidth < 1024) setIsSidebarOpen(false);  // ← Cierra sidebar en mobile
+    if (window.innerWidth < 1024) setIsSidebarOpen(false);
   };
 
   const handleTipoChange = (value: string) => {
@@ -102,24 +102,43 @@ export default function SolicitantePanel() {
 
   const handleSaveDraft = () => {
     if (!titulo || !tipo || !contenido) {
-      alert("Por favor completa todos los campos");
+      alert("Completa todos los campos");
       return;
     }
     alert(`Borrador guardado con folio: ${folio}`);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setShowQR(true);
-    setTimeout(() => {
-      alert(`Trámite creado exitosamente con folio: ${folio}`);
-      setTitulo("");
-      setTipo("");
-      setContenido("");
-      setFolio("");
-      setQrData("");
-      setShowQR(false);
-    }, 3000);
+    if (!titulo || !tipo || !contenido) {
+      alert("Completa todos los campos");
+      return;
+    }
+    try {
+      const formData = new FormData();
+      formData.append('titulo', titulo);
+      formData.append('tipo', tipo);
+      formData.append('contenido', contenido);
+      formData.append('folio', folio);
+      if (file) formData.append('archivo', file);
+
+      const headers = { Authorization: `Token ${token}` };
+      await axios.post(`${API_BASE}/solicitante/create-tramite/`, formData, { headers });
+      setShowQR(true);
+      setTimeout(() => {
+        alert(`Trámite creado con folio: ${folio}`);
+        setTitulo("");
+        setTipo("");
+        setContenido("");
+        setFolio("");
+        setQrData("");
+        setFile(null);
+        setShowQR(false);
+        window.location.reload();
+      }, 3000);
+    } catch (err) {
+      alert("Error al enviar: " + (err as Error).message);
+    }
   };
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
@@ -130,156 +149,136 @@ export default function SolicitantePanel() {
         <CardTitle className="text-2xl text-[#3B82F6]">Crear Nuevo Trámite</CardTitle>
       </CardHeader>
       <CardContent className="p-6 space-y-6">
-        <Alert className="border-2 border-[#3B82F6]/20 bg-gradient-to-r from-blue-50 to-blue-100/50 shadow-lg">
-          <AlertDescription className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#3B82F6] shadow-md">
-                <FileText className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <p className="font-semibold text-[#3B82F6]">¡Inicia tu trámite en minutos!</p>
-                <p className="text-sm text-blue-700">Genera folio y QR automáticamente</p>
-              </div>
-            </div>
-            <Bell className="h-5 w-5 text-[#3B82F6]" />
+        <Alert className="border-2 border-[#3B82F6]/20 bg-gradient-to-r from-blue-50 to-blue-100/50">
+          <FileText className="h-4 w-4" />
+          <AlertDescription>
+            Completa el formulario para iniciar un nuevo trámite. El sistema generará un folio único y QR para rastreo. Adjunta un archivo si es necesario.
           </AlertDescription>
         </Alert>
-
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="titulo" className="text-base font-semibold text-gray-700">
-              Título del Trámite
-            </Label>
+            <Label htmlFor="titulo">Título del Trámite</Label>
             <Input
               id="titulo"
-              placeholder="Ej: Solicitud de compra de equipo"
               value={titulo}
               onChange={(e) => setTitulo(e.target.value)}
-              className="h-12 border-2 border-gray-200 focus:border-[#3B82F6] focus:ring-2 focus:ring-[#3B82F6]/20"
+              placeholder="Ej: Solicitud de Vacaciones"
+              required
             />
           </div>
-
           <div className="space-y-2">
-            <Label htmlFor="tipo" className="text-base font-semibold text-gray-700">
-              Tipo de Trámite
-            </Label>
+            <Label htmlFor="tipo">Tipo de Trámite</Label>
             <Select value={tipo} onValueChange={handleTipoChange}>
-              <SelectTrigger className="h-12">
-                <SelectValue placeholder="Selecciona el tipo de trámite" />
+              <SelectTrigger>
+                <SelectValue placeholder="Selecciona un tipo" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="compra">Solicitud de Compra</SelectItem>
-                <SelectItem value="reembolso">Reembolso de Gastos</SelectItem>
-                <SelectItem value="vacaciones">Solicitud de Vacaciones</SelectItem>
-                <SelectItem value="permiso">Permiso Especial</SelectItem>
+                <SelectItem value="vacaciones">Vacaciones</SelectItem>
+                <SelectItem value="permiso">Permiso</SelectItem>
+                <SelectItem value="cambio">Cambio de Departamento</SelectItem>
+                <SelectItem value="otro">Otro</SelectItem>
               </SelectContent>
             </Select>
-            {folio && (
-              <Badge className="mt-2 bg-green-100 text-green-800">
-                Folio generado: {folio}
-              </Badge>
-            )}
+            {folio && <p className="text-sm text-blue-600">Folio generado: <strong>{folio}</strong></p>}
           </div>
-
           <div className="space-y-2">
-            <Label htmlFor="contenido" className="text-base font-semibold text-gray-700">
-              Descripción Detallada
-            </Label>
+            <Label htmlFor="contenido">Descripción Detallada</Label>
             <Textarea
               id="contenido"
-              placeholder="Describe el motivo y detalles del trámite..."
               value={contenido}
               onChange={(e) => setContenido(e.target.value)}
-              className="min-h-[120px] border-2 border-gray-200 focus:border-[#3B82F6] focus:ring-2 focus:ring-[#3B82F6]/20"
+              placeholder="Describe el motivo del trámite..."
+              required
             />
           </div>
-
-          {showQR && (
-            <div className="text-center">
-              <p className="text-sm text-gray-600 mb-4">
-                Escanea este código para verificar tu documento
-              </p>
-              <QRGenerator value={qrData} size={200} />
-              <Badge className="mt-4 bg-[#10B981] px-4 py-2 text-sm text-white shadow-lg">
-                Folio: {folio}
-              </Badge>
-            </div>
-          )}
-
-          <div className="flex gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              className="flex-1 border-2 border-gray-300 bg-white transition-all hover:scale-105 hover:border-gray-400 hover:shadow-lg active:scale-95"
-              onClick={handleSaveDraft}
-            >
+          <div className="space-y-2">
+            <Label htmlFor="archivo">Archivo Adjunto (Opcional)</Label>
+            <Input
+              id="archivo"
+              type="file"
+              onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)}
+            />
+            {file && <p className="text-sm text-gray-600">Archivo: {file.name}</p>}
+          </div>
+          <div className="flex gap-4">
+            <Button type="button" variant="outline" onClick={handleSaveDraft}>
               <Save className="mr-2 h-4 w-4" />
               Guardar Borrador
             </Button>
-            <Button
-              type="submit"
-              className="flex-1 bg-gradient-to-r from-[#10B981] to-[#059669] shadow-lg transition-all hover:scale-105 hover:shadow-xl active:scale-95"
-            >
+            <Button type="submit">
               <Send className="mr-2 h-4 w-4" />
-              Enviar Trámite
+              Enviar
             </Button>
           </div>
         </form>
+        {showQR && (
+          <Alert className="border-green-200 bg-green-50">
+            <CheckCircle2 className="h-4 w-4" />
+            <AlertDescription>
+              <p className="font-semibold">Trámite en proceso...</p>
+              <p className="text-sm">Folio: {folio}</p>
+              <div className="mt-2">
+                <QRGenerator value={qrData} size={200} />
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
       </CardContent>
     </Card>
   );
 
   const renderMisTramites = () => (
-    <Card className="animate-in fade-in slide-in-from-bottom-4 border-2 border-gray-200 shadow-2xl duration-700">
-      <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100">
-        <CardTitle className="text-2xl text-[#10B981]">Mis Trámites</CardTitle>
+    <Card className="animate-in fade-in slide-in-from-bottom-4 border-2 border-blue-200 shadow-xl duration-700">
+      <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100">
+        <CardTitle className="text-2xl text-blue-600">Mis Trámites</CardTitle>
       </CardHeader>
       <CardContent className="p-6">
         {loading ? (
           <div className="flex justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-green-500" />
+            <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
           </div>
         ) : error ? (
           <p className="text-red-500 text-center">{error}</p>
+        ) : tramites.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-slate-500 mb-4">No tienes trámites en proceso. ¡Crea uno!</p>
+            <Button variant="outline">Crear Trámite</Button>
+          </div>
         ) : (
-          <div className="overflow-x-auto w-full">  {/* ← FIX: Responsive scroll */}
+          <div className="w-full overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="border-b-2">
-                  <TableHead className="font-bold">Folio</TableHead>
-                  <TableHead className="font-bold">Tipo</TableHead>
-                  <TableHead className="font-bold">Estado</TableHead>
-                  <TableHead className="font-bold">Fecha</TableHead>
-                  <TableHead className="font-bold">QR</TableHead>
+                <TableRow>
+                  <TableHead>Folio</TableHead>
+                  <TableHead>Título</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead>Fecha</TableHead>
+                  <TableHead>Archivo</TableHead>
+                  <TableHead>QR</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {tramites.map((tramite, index) => (
-                  <TableRow
-                    key={tramite.id}
-                    className="animate-in fade-in border-b transition-all hover:bg-gradient-to-r hover:from-green-50 hover:to-transparent hover:shadow-md duration-300"
-                    style={{ animationDelay: `${index * 100}ms` } as React.CSSProperties}
-                  >
-                    <TableCell className="font-bold text-gray-900">{tramite.id}</TableCell>
-                    <TableCell className="font-medium">{tramite.tipo}</TableCell>
+                {tramites.map((tramite: any) => (
+                  <TableRow key={tramite.id}>
+                    <TableCell className="font-mono text-sm text-blue-600">{tramite.folio}</TableCell>
+                    <TableCell className="font-medium">{tramite.titulo}</TableCell>
+                    <TableCell><Badge variant="secondary">{tramite.tipo}</Badge></TableCell>
                     <TableCell>
-                      <Badge
-                        className={`shadow-md ${
-                          tramite.estado === "Aprobado"
-                            ? "bg-green-500 text-white"
-                            : tramite.estado === "En Revisión"
-                              ? "bg-blue-500 text-white"
-                              : "bg-gray-500 text-white"
-                        }`}
-                      >
+                      <Badge className={tramite.estado === "Pendiente" ? "bg-orange-500 text-white" : "bg-green-500 text-white"}>
                         {tramite.estado}
                       </Badge>
                     </TableCell>
                     <TableCell className="font-medium text-gray-600">{tramite.fecha}</TableCell>
                     <TableCell>
-                      <div className="rounded-lg bg-gray-50 p-2 shadow-inner transition-all hover:scale-110 hover:shadow-lg">
-                        <QRGenerator value={generateQRData(tramite.qr, tramite.tipo, tramite.fecha)} size={48} />
-                      </div>
+                      {tramite.archivo ? (
+                        <a href={tramite.archivo} className="text-blue-600 hover:underline">Descargar</a>
+                      ) : (
+                        "No adjunto"
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <QRGenerator value={tramite.qr} size={48} />
                     </TableCell>
                   </TableRow>
                 ))}
@@ -306,8 +305,13 @@ export default function SolicitantePanel() {
           </div>
         ) : error ? (
           <p className="text-red-500 text-center">{error}</p>
+        ) : notificaciones.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-slate-500 mb-4">Sin notificaciones nuevas. Todo en calma. 🔔</p>
+            <Button variant="outline">Actualizar</Button>
+          </div>
         ) : (
-          notificaciones.map((notif) => (
+          notificaciones.map((notif: any) => (
             <div
               key={notif.id}
               className={`flex flex-col sm:flex-row items-start gap-4 rounded-xl p-4 shadow-sm ${
@@ -357,9 +361,9 @@ export default function SolicitantePanel() {
             onClick: (e: React.MouseEvent) => handleSectionChange(item.label, e)
           }))} 
           isOpen={isSidebarOpen}
-          onClose={() => setIsSidebarOpen(false)}  // ← Agregado pa' mobile
+          onClose={() => setIsSidebarOpen(false)}
         />
-        <main className={cn(  // ← Usando cn pa' responsive
+        <main className={cn(
           "flex-1 transition-all duration-300 p-2 sm:p-4 lg:p-6 overflow-y-auto w-full",
           isSidebarOpen ? "lg:ml-0 ml-0" : "ml-0"
         )}>
