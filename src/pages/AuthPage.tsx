@@ -223,7 +223,7 @@ const { token, role, user_id } = response.data;
             {/* Login Form */}
             <div className="w-full flex-shrink-0">
               <form onSubmit={handleLoginSubmit} className="space-y-6">
-                {errorMsg && <p className="text-red-600 text-sm text-center mb-4">{errorMsg}</p>}  // ← NUEVO: Error de API
+                {errorMsg && <p className="text-red-600 text-sm text-center mb-4">{errorMsg}</p>} 
                 {!showMfa ? (
                   <>
                     <div className="relative">
