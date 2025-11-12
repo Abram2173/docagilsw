@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Settings, FileText, Database, Edit, TrendingUp, Clock, CheckCircle2, FileText as FileTextIcon, User, Loader2 } from "lucide-react";
+import { Settings, FileText, Database, TrendingUp, Clock, CheckCircle2, FileText as FileTextIcon, User, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const API_BASE = "http://127.0.0.1:8000/api";  // Ajusta puerto si cambias
