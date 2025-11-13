@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Settings, FileText, Database, TrendingUp, Clock, CheckCircle2, FileText as FileTextIcon, User, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";  // Render en prod
+const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api" + "/";  // Render en prod
 
 export default function AdministradorPanel() {
   const [currentSection, setCurrentSection] = useState("usuarios");
@@ -37,10 +37,10 @@ useEffect(() => {
     try {
       const headers = { Authorization: `Token ${token}` };
       const [usuariosRes, flujosRes, reportesRes, kpisRes] = await Promise.all([
-        axios.get(`${API_BASE}admin/usuarios/`, { headers }),  // Render
-        axios.get(`${API_BASE}documents/flows/`, { headers }),
-        axios.get(`${API_BASE}admin/reportes/`, { headers }),
-        axios.get(`${API_BASE}admin/kpis/`, { headers }),
+        axios.get(`${API_BASE}/admin/usuarios/`, { headers }),  // ← /admin/usuarios/ con leading /
+        axios.get(`${API_BASE}/documents/flows/`, { headers }),  // ← /documents/flows/
+        axios.get(`${API_BASE}/admin/reportes/`, { headers }),  // ← /admin/reportes/
+        axios.get(`${API_BASE}/admin/kpis/`, { headers }),  // ← /admin/kpis/
       ]);
       setUsuarios(usuariosRes.data);
       setEtapasFlujo(flujosRes.data);
