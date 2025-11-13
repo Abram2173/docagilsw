@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Settings, FileText, Database, TrendingUp, Clock, CheckCircle2, FileText as FileTextIcon, User, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const API_BASE = "http://127.0.0.1:8000/api";  // Ajusta puerto si cambias
+const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";  // Render en prod
 
 export default function AdministradorPanel() {
   const [currentSection, setCurrentSection] = useState("usuarios");
@@ -25,42 +25,35 @@ export default function AdministradorPanel() {
 
   const token = localStorage.getItem("token");
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!token) {
-        setError("No autenticado – inicia sesión");
-        setLoading(false);
-        return;
-      }
-      setLoading(true);
-      setError(null);
-      try {
-        const headers = { Authorization: `Token ${token}` };
-        const [usuariosRes, flujosRes, reportesRes, kpisRes] = await Promise.all([
-          axios.get(`${API_BASE}/admin/usuarios/`, { headers }),
-          axios.get(`${API_BASE}/documents/flows/`, { headers }),
-          axios.get(`${API_BASE}/admin/reportes/`, { headers }),
-          axios.get(`${API_BASE}/admin/kpis/`, { headers })
-        ]);
-        setUsuarios(usuariosRes.data);
-        setEtapasFlujo(flujosRes.data);
-        setReportes(reportesRes.data);
-        setKpis(kpisRes.data || { usuarios: 0, documentos: 0, tiempo: "0 días", cumplimiento: "0%" });
-        console.log("Datos cargados desde backend!");
-      } catch (err) {
-        setError("Error al cargar datos: " + (err as Error).message);
-        console.error(err);
-        // Fallback hardcoded temporal
-        setUsuarios([
-          { id: 1, full_name: "Juan Pérez", email: "juan@instituto.edu.mx", role: "solicitante", estado: "Activo", is_approved: true },
-          { id: 2, full_name: "Test Solicitante", email: "test@instituto.edu.mx", role: "solicitante", estado: "Pendiente", is_approved: false }
-        ]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, [token]);
+useEffect(() => {
+  const fetchData = async () => {
+    if (!token) {
+      setError("No autenticado – inicia sesión");
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const headers = { Authorization: `Token ${token}` };
+      const [usuariosRes, flujosRes, reportesRes, kpisRes] = await Promise.all([
+        axios.get(`${API_BASE}admin/usuarios/`, { headers }),  // Render
+        axios.get(`${API_BASE}documents/flows/`, { headers }),
+        axios.get(`${API_BASE}admin/reportes/`, { headers }),
+        axios.get(`${API_BASE}admin/kpis/`, { headers }),
+      ]);
+      setUsuarios(usuariosRes.data);
+      setEtapasFlujo(flujosRes.data);
+      setReportes(reportesRes.data);
+      setKpis(kpisRes.data);
+    } catch (error: any) {
+      setError(error.response?.data?.non_field_errors?.[0] || "Error al cargar datos");
+    } finally {
+      setLoading(false);
+    }
+  };
+  fetchData();
+}, [token]);
 
   const sectionMap: Record<string, string> = {
     "Usuarios": "usuarios",
