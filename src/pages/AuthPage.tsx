@@ -86,7 +86,7 @@ export default function AuthPage() {
     setIsSubmitting(true);
     setErrorMsg("");
     try {
-      const response = await axios.post(`${API_BASE}auth/register/`, {
+      const response = await axios.post(`${API_BASE}/auth/register/`, {
         username: fullName.toLowerCase().replace(/\s+/g, '_'),
         full_name: fullName,
         email: registerEmail,
@@ -130,7 +130,7 @@ export default function AuthPage() {
     setIsSubmitting(true);
     setErrorMsg("");
     try {
-      const response = await axios.post(`${API_BASE}auth/login/`, {
+      const response = await axios.post(`${API_BASE}/auth/login/`, {
         username: loginUsername,
         password: loginPassword,
       });
