@@ -1,11 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import axios from "axios";  // ← NUEVO: Para fetch fácil
+import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";
 
@@ -21,7 +20,7 @@ export default function AuthPage() {
   const [passwordError, setPasswordError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");  // ← NUEVO: Para errores de API
+  const [errorMsg, setErrorMsg] = useState("");
 
   // Login states
   const [loginUsername, setLoginUsername] = useState("");
@@ -42,7 +41,7 @@ export default function AuthPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [acceptTerms, setAcceptTerms] = useState(false);
 
-  // Validaciones (sin cambio)
+  // Validaciones
   const validateEmail = (email: string) => {
     if (email && !email.endsWith("@instituto.edu.mx")) {
       setEmailError("El correo debe ser institucional (@instituto.edu.mx)");
@@ -53,51 +52,40 @@ export default function AuthPage() {
   };
 
   const handleRegisterEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setRegisterEmail(value);
-    validateEmail(value);
+    setRegisterEmail(e.target.value);
+    validateEmail(e.target.value);
   };
 
+  // ← AGREGADO: nextStep para error line 348
+  const nextStep = () => setCurrentStep((prev) => Math.min(prev + 1, 3));  // 3 steps max
+
+  // ← FIX: Usa handlePasswordChange si la necesitas, o borra la función
+
   const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setConfirmPassword(value);
-    if (password && value && password !== value) {
+    setConfirmPassword(e.target.value);
+    if (password && e.target.value !== password) {
       setPasswordError("Las contraseñas no coinciden");
     } else {
       setPasswordError("");
     }
   };
 
-  const nextStep = () => {
-    if (currentStep === 1) {
-      if (!fullName || !registerEmail || !phone || !department) {
-        alert("Completa todos los campos del paso 1");
-        return;
-      }
-      if (!validateEmail(registerEmail)) return;
-      setCurrentStep(2);
+  const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 1));
+
+  // ← Handle Register con Backend
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password !== confirmPassword) {
+      setPasswordError("Las contraseñas no coinciden");
+      return;
     }
-  };
-
-  const prevStep = () => {
-    setCurrentStep(1);
-  };
-
-
-// ← Handle Register con Backend
-const handleRegisterSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  if (password !== confirmPassword) {
-    setPasswordError("Las contraseñas no coinciden");
-    return;
-  }
-  if (!acceptTerms) {
-    alert("Acepta los términos");
-    return;
-  }
-  setIsSubmitting(true);
-  setErrorMsg("");
-  try {
+    if (!acceptTerms) {
+      alert("Acepta los términos");
+      return;
+    }
+    setIsSubmitting(true);
+    setErrorMsg("");
+    try {
       const response = await axios.post(`${API_BASE}auth/register/`, {
         username: fullName.toLowerCase().replace(/\s+/g, '_'),
         full_name: fullName,
@@ -108,57 +96,56 @@ const handleRegisterSubmit = async (e: React.FormEvent) => {
         password,
         confirm_password: confirmPassword,
       });
-    setIsSuccess(true);
-    console.log("Registro exitoso:", response.data);
-    setCurrentStep(1);
-    setTimeout(() => {
-      setIsSuccess(false);
-      // Reset form
-      setFullName(""); setRegisterEmail(""); setPhone(""); setDepartment(""); setRole("");
-      setPassword(""); setConfirmPassword(""); setAcceptTerms(false);
-    }, 3000);
-  } catch (error: any) {
-    setErrorMsg(error.response?.data?.non_field_errors?.[0] || "Error en registro. Intenta de nuevo.");
-    alert(errorMsg);  // ← FIX: errorMsg, no setErrorMsg
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+      setIsSuccess(true);
+      console.log("Registro exitoso:", response.data);
+      setCurrentStep(1);
+      setTimeout(() => {
+        setIsSuccess(false);
+        // Reset form
+        setFullName(""); setRegisterEmail(""); setPhone(""); setDepartment(""); setRole("");
+        setPassword(""); setConfirmPassword(""); setAcceptTerms(false);
+      }, 3000);
+    } catch (error: any) {
+      setErrorMsg(error.response?.data?.non_field_errors?.[0] || "Error en registro. Intenta de nuevo.");
+      alert(errorMsg);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-
-// ← Handle Login con Backend
-const handleLoginSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  if (mfaEnabled && !showMfa) {
-    setShowMfa(true);
-    return;
-  }
-  if (mfaEnabled && showMfa) {
-    if (mfaCode.length !== 6) {
-      alert("Código MFA inválido");
+  // ← Handle Login con Backend
+  const handleLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (mfaEnabled && !showMfa) {
+      setShowMfa(true);
       return;
     }
-    // ← EXPANDE AQUÍ: Fetch MFA verify si backend lo tiene (POST /auth/mfa-verify/ con token + code)
-    // Por ahora, simula login
-  }
-  setIsSubmitting(true);
-  setErrorMsg("");
-try {
-  const response = await axios.post(`${API_BASE}auth/login/`, {
-    username: loginUsername,
-    password: loginPassword,
-  });
-  const { token, role } = response.data;  // ← Asume backend retorna { token, role } (ajusta si es user data)
-  localStorage.setItem('token', token);
-  localStorage.setItem('role', role);  // ← GUARDA ROLE PARA RUTAS
-  navigate('/dashboard');  // ← Redirige a dashboard, que usa role para panel
-} catch (error: any) {
-  setErrorMsg(error.response?.data?.non_field_errors?.[0] || "Credenciales inválidas");
-}finally {
-  setIsSubmitting(false);
-  setShowMfa(false);  // Reset MFA
-}
-};
+    if (mfaEnabled && showMfa) {
+      if (mfaCode.length !== 6) {
+        alert("Código MFA inválido");
+        return;
+      }
+      // EXPANDE AQUÍ: Fetch MFA verify si backend lo tiene
+    }
+    setIsSubmitting(true);
+    setErrorMsg("");
+    try {
+      const response = await axios.post(`${API_BASE}auth/login/`, {
+        username: loginUsername,
+        password: loginPassword,
+      });
+      const { token, role } = response.data;  // Asume backend retorna { token, role }
+      localStorage.setItem('token', token);
+      localStorage.setItem('role', role);  // GUARDA ROLE PARA RUTAS
+      navigate('/dashboard');  // Redirige a dashboard
+    } catch (error: any) {
+      setErrorMsg(error.response?.data?.non_field_errors?.[0] || "Credenciales inválidas");
+      alert(errorMsg);
+    } finally {
+      setIsSubmitting(false);
+      setShowMfa(false);
+    }
+  };
 
 
   // Resto del JSX sin cambio (greeting, tabs, forms...)
