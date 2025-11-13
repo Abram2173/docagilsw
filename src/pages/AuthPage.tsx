@@ -143,22 +143,18 @@ const handleLoginSubmit = async (e: React.FormEvent) => {
   }
   setIsSubmitting(true);
   setErrorMsg("");
-  try {
-    const response = await axios.post(`${API_BASE}auth/login/`, {
-      username: loginUsername,
-      password: loginPassword,
-    });
-    const { token } = response.data;
-    localStorage.setItem('token', token);  // ← GUARDA TOKEN PARA AUTH
-    console.log("Login exitoso:", token);
-    navigate('/dashboard');  // ← REDIRIGE A DASHBOARD O HOME
-  } catch (error: any) {
-    setErrorMsg(error.response?.data?.non_field_errors?.[0] || "Credenciales inválidas");
-    alert(setErrorMsg);  // ← FIX: errorMsg, no setErrorMsg
-  } finally {
-    setIsSubmitting(false);
-    setShowMfa(false);  // Reset MFA
-  }
+try {
+  const response = await axios.post(`${API_BASE}auth/login/`, {
+    username: loginUsername,
+    password: loginPassword,
+  });
+  const { token, role } = response.data;  // ← Asume backend retorna { token, role } (ajusta si es user data)
+  localStorage.setItem('token', token);
+  localStorage.setItem('role', role);  // ← GUARDA ROLE PARA RUTAS
+  navigate('/dashboard');  // ← Redirige a dashboard, que usa role para panel
+} catch (error: any) {
+  setErrorMsg(error.response?.data?.non_field_errors?.[0] || "Credenciales inválidas");
+}
 };
 
 
