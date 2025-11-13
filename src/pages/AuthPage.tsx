@@ -154,6 +154,9 @@ try {
   navigate('/dashboard');  // ← Redirige a dashboard, que usa role para panel
 } catch (error: any) {
   setErrorMsg(error.response?.data?.non_field_errors?.[0] || "Credenciales inválidas");
+}finally {
+  setIsSubmitting(false);
+  setShowMfa(false);  // Reset MFA
 }
 };
 
