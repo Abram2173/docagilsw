@@ -98,16 +98,16 @@ const handleRegisterSubmit = async (e: React.FormEvent) => {
   setIsSubmitting(true);
   setErrorMsg("");
   try {
-    const response = await axios.post(`${API_BASE}/auth/register/`, {
-      username: fullName.toLowerCase().replace(/\s+/g, '_'),  // Genera username simple de fullName
-      full_name: fullName,
-      email: registerEmail,
-      phone,
-      department,
-      role,
-      password,
-      confirm_password: confirmPassword,
-    });
+      const response = await axios.post(`${API_BASE}auth/register/`, {
+        username: fullName.toLowerCase().replace(/\s+/g, '_'),
+        full_name: fullName,
+        email: registerEmail,
+        phone,
+        department,
+        role,
+        password,
+        confirm_password: confirmPassword,
+      });
     setIsSuccess(true);
     console.log("Registro exitoso:", response.data);
     setCurrentStep(1);
