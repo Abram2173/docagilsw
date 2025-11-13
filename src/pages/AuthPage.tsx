@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";
+const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api" + "/";
 
 export default function AuthPage() {
   const [searchParams] = useSearchParams();
@@ -86,7 +86,7 @@ export default function AuthPage() {
     setIsSubmitting(true);
     setErrorMsg("");
     try {
-      const response = await axios.post(`${API_BASE}/auth/register/`, {
+      const response = await axios.post(`${API_BASE}auth/register/`, {
         username: fullName.toLowerCase().replace(/\s+/g, '_'),
         full_name: fullName,
         email: registerEmail,
@@ -130,7 +130,7 @@ export default function AuthPage() {
     setIsSubmitting(true);
     setErrorMsg("");
     try {
-      const response = await axios.post(`${API_BASE}/auth/login/`, {
+      const response = await axios.post(`${API_BASE}auth/login/`, {
         username: loginUsername,
         password: loginPassword,
       });
