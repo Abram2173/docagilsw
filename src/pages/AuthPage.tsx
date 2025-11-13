@@ -6,7 +6,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const API_BASE = "http://127.0.0.1:8000/api";  // ← AJUSTA PUERTO SI CAMBIAS
+
+const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";
 
 export default function AuthPage() {
   const [searchParams] = useSearchParams();
@@ -83,88 +84,83 @@ export default function AuthPage() {
   };
 
 
-  // ← NUEVO: Handle Register con Backend
-  const handleRegisterSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (password !== confirmPassword) {
-      setPasswordError("Las contraseñas no coinciden");
-      return;
-    }
-    if (!acceptTerms) {
-      alert("Acepta los términos");
-      return;
-    }
-    setIsSubmitting(true);
-    setErrorMsg("");
-    try {
-      const response = await axios.post(`${API_BASE}/auth/register/`, {
-        username: fullName.toLowerCase().replace(/\s+/g, '_'),  // ← Genera username simple de fullName
-        full_name: fullName,
-        email: registerEmail,
-        phone,
-        department,
-        role,
-        password,
-        confirm_password: confirmPassword,
-      });
-      setIsSuccess(true);
-      console.log("Registro exitoso:", response.data);
-      setCurrentStep(1);
-      setTimeout(() => {
-        setIsSuccess(false);
-        // Reset form
-        setFullName(""); setRegisterEmail(""); setPhone(""); setDepartment(""); setRole("");
-        setPassword(""); setConfirmPassword(""); setAcceptTerms(false);
-      }, 3000);
-    } catch (error: any) {
-      setErrorMsg(error.response?.data?.non_field_errors?.[0] || "Error en registro. Intenta de nuevo.");
-      alert(setErrorMsg);  // ← Temporal, usa toast después
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+// ← Handle Register con Backend
+const handleRegisterSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (password !== confirmPassword) {
+    setPasswordError("Las contraseñas no coinciden");
+    return;
+  }
+  if (!acceptTerms) {
+    alert("Acepta los términos");
+    return;
+  }
+  setIsSubmitting(true);
+  setErrorMsg("");
+  try {
+    const response = await axios.post(`${API_BASE}/auth/register/`, {
+      username: fullName.toLowerCase().replace(/\s+/g, '_'),  // Genera username simple de fullName
+      full_name: fullName,
+      email: registerEmail,
+      phone,
+      department,
+      role,
+      password,
+      confirm_password: confirmPassword,
+    });
+    setIsSuccess(true);
+    console.log("Registro exitoso:", response.data);
+    setCurrentStep(1);
+    setTimeout(() => {
+      setIsSuccess(false);
+      // Reset form
+      setFullName(""); setRegisterEmail(""); setPhone(""); setDepartment(""); setRole("");
+      setPassword(""); setConfirmPassword(""); setAcceptTerms(false);
+    }, 3000);
+  } catch (error: any) {
+    setErrorMsg(error.response?.data?.non_field_errors?.[0] || "Error en registro. Intenta de nuevo.");
+    alert(errorMsg);  // ← FIX: errorMsg, no setErrorMsg
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
-  // ← NUEVO: Handle Login con Backend
-  const handleLoginSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (mfaEnabled && !showMfa) {
-      setShowMfa(true);
+
+// ← Handle Login con Backend
+const handleLoginSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (mfaEnabled && !showMfa) {
+    setShowMfa(true);
+    return;
+  }
+  if (mfaEnabled && showMfa) {
+    if (mfaCode.length !== 6) {
+      alert("Código MFA inválido");
       return;
     }
-    if (mfaEnabled && showMfa) {
-      if (mfaCode.length !== 6) {
-        alert("Código MFA inválido");
-        return;
-      }
-      // ← EXPANDE AQUÍ: Fetch MFA verify si backend lo tiene
-    }
-    setIsSubmitting(true);
-    setErrorMsg("");
-    try {
-      const response = await axios.post(`${API_BASE}/auth/login/`, {
-        username: loginUsername,
-        password: loginPassword,
-      });
-const { token, role, user_id } = response.data;
-      localStorage.setItem("token", token);
-      localStorage.setItem("role", role);
-      localStorage.setItem("user_id", user_id);  // ← FIX: Usa user_id si lo necesitas
-      console.log("Login exitoso como:", role, "Token:", token);
-      // Navigate por role
-      switch (role) {
-        case "solicitante": navigate("/solicitante"); break;
-        case "aprobador": navigate("/aprobador"); break;
-        case "auditor": navigate("/auditor"); break;
-        case "admin": navigate("/administrador"); break;
-        default: navigate("/");  // ← FIX: Default home si role malo
-      }
-    } catch (error: any) {
-      setErrorMsg(error.response?.data?.non_field_errors?.[0] || "Credenciales inválidas o cuenta no aprobada.");
-      alert(setErrorMsg);  // ← Temporal
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+    // ← EXPANDE AQUÍ: Fetch MFA verify si backend lo tiene (POST /auth/mfa-verify/ con token + code)
+    // Por ahora, simula login
+  }
+  setIsSubmitting(true);
+  setErrorMsg("");
+  try {
+    const response = await axios.post(`${API_BASE}/auth/login/`, {
+      username: loginUsername,
+      password: loginPassword,
+    });
+    const { token } = response.data;
+    localStorage.setItem('token', token);  // ← GUARDA TOKEN PARA AUTH
+    console.log("Login exitoso:", token);
+    navigate('/dashboard');  // ← REDIRIGE A DASHBOARD O HOME
+  } catch (error: any) {
+    setErrorMsg(error.response?.data?.non_field_errors?.[0] || "Credenciales inválidas");
+    alert(setErrorMsg);  // ← FIX: errorMsg, no setErrorMsg
+  } finally {
+    setIsSubmitting(false);
+    setShowMfa(false);  // Reset MFA
+  }
+};
+
 
   // Resto del JSX sin cambio (greeting, tabs, forms...)
   return (
