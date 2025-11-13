@@ -144,7 +144,7 @@ const handleLoginSubmit = async (e: React.FormEvent) => {
   setIsSubmitting(true);
   setErrorMsg("");
   try {
-    const response = await axios.post(`${API_BASE}/auth/login/`, {
+    const response = await axios.post(`${API_BASE}auth/login/`, {
       username: loginUsername,
       password: loginPassword,
     });
