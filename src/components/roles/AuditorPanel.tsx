@@ -57,21 +57,21 @@ useEffect(() => {
     setLoading(true);
     setError(null);
     try {
+      const token = localStorage.getItem('token');
       if (!token) throw new Error("No token");
-      const headers = { Authorization: `Token ${token}` };
+      const headers = { Authorization: `Token ${token}` };  // ← FIX: Headers con token para todas calls
       const [usuariosRes, flujosRes, reportesRes, kpisRes] = await Promise.all([
-        axios.get(`${API_BASE}/admin/usuarios/`, { headers }),
+        axios.get(`${API_BASE}/admin/usuarios/`, { headers }),  // ← FIX: Headers en GET
         axios.get(`${API_BASE}/documents/flows/`, { headers }),
         axios.get(`${API_BASE}/admin/reportes/`, { headers }),
         axios.get(`${API_BASE}/admin/kpis/`, { headers }),
       ]);
 
-      setUsuarios(usuariosRes.data);  // ← FIX: Usa setUsuarios (silencia unused)
-      setEtapasFlujo(flujosRes.data);  // ← FIX: Usa setEtapasFlujo
-      setReportes(reportesRes.data);  // ← FIX: Usa setReportes
-      setKpis(kpisRes.data);  // ← FIX: Usa setKpis
-      setHistorial(kpisRes.data.historial || []);  // ← FIX: Usa setHistorial
-      // Gráficos de data (ajusta si backend retorna)
+      setUsuarios(usuariosRes.data);
+      setEtapasFlujo(flujosRes.data);
+      setReportes(reportesRes.data);
+      setKpis(kpisRes.data);
+      setHistorial(kpisRes.data.historial || []);
       setTiempoData(kpisRes.data.tiempo_data || []);
       setRechazosData(kpisRes.data.rechazos_data || []);
     } catch (error: any) {
