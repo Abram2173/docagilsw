@@ -27,20 +27,21 @@ export default function AdministradorPanel() {
 
 useEffect(() => {
   const fetchData = async () => {
+    const token = localStorage.getItem("token");
     if (!token) {
       setError("No autenticado – inicia sesión");
       setLoading(false);
       return;
     }
+    const headers = { Authorization: `Token ${token}` };  // ← AGREGADO: Headers con token
     setLoading(true);
     setError(null);
     try {
-      const headers = { Authorization: `Token ${token}` };
       const [usuariosRes, flujosRes, reportesRes, kpisRes] = await Promise.all([
-        axios.get(`${API_BASE}/admin/usuarios/`, { headers }),  // ← /admin/usuarios/ con leading /
-        axios.get(`${API_BASE}/documents/flows/`, { headers }),  // ← /documents/flows/
-        axios.get(`${API_BASE}/admin/reportes/`, { headers }),  // ← /admin/reportes/
-        axios.get(`${API_BASE}/admin/kpis/`, { headers }),  // ← /admin/kpis/
+        axios.get(`${API_BASE}/admin/usuarios/`, { headers }),  // ← AGREGADO: { headers } en cada call
+        axios.get(`${API_BASE}/documents/flows/`, { headers }),
+        axios.get(`${API_BASE}/admin/reportes/`, { headers }),
+        axios.get(`${API_BASE}/admin/kpis/`, { headers }),
       ]);
       setUsuarios(usuariosRes.data);
       setEtapasFlujo(flujosRes.data);

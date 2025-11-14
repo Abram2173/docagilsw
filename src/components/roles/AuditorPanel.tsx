@@ -23,6 +23,8 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import axios from "axios";
+const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";  // ← FIX: Define API_BASE
 
 const sidebarItems = [
   { label: "KPIs", href: "/auditor", icon: "📊" },
@@ -37,33 +39,49 @@ const sidebarItems = [
 
 export default function AuditorPanel() {
   const [currentSection, setCurrentSection] = useState("kpis");
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);  // ← NUEVO: Mobile sidebar
-  const [historial, setHistorial] = useState([]);  // ← VACÍO: Espera API
-  const [tiempoData, setTiempoData] = useState([]);  // ← VACÍO para gráficos
-  const [rechazosData, setRechazosData] = useState([]);  // ← VACÍO para gráficos
-  const [loading, setLoading] = useState(true);  // ← NUEVO: Loader
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [usuarios, setUsuarios] = useState([]);  // ← FIX: State para usuarios
+  const [etapasFlujo, setEtapasFlujo] = useState([]);  // ← FIX: State para flujos
+  const [reportes, setReportes] = useState([]);  // ← State para reportes
+  const [kpis, setKpis] = useState({ usuarios: 0, documentos: 0, tiempo: "0 días", cumplimiento: "0%" });  // ← FIX: State para KPIs
+  const [historial, setHistorial] = useState([]);  // ← FIX: State para historial (úsalo en fetch si lo tienes)
+  const [tiempoData, setTiempoData] = useState([]);  // Para gráficos
+  const [rechazosData, setRechazosData] = useState([]);  // Para rechazos
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // ← NUEVO: Fetch simulado REMOVIDO: Ahora genérico para API real
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        // ← AGREGAR AQUÍ: await axios.get('/api/auditor/historial'); setHistorial(res.data);
-        // Por ahora, placeholders vacíos
-        setHistorial([]);  // ← VACÍO hasta API
-        setTiempoData([]);  // ← VACÍO
-        setRechazosData([]);  // ← VACÍO
-        console.log("Datos de auditor cargados (listo para API real)");
-      } catch (err) {
-        setError("Error al cargar datos: " + (err as Error).message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+  const token = localStorage.getItem("token");
+
+useEffect(() => {
+  const fetchData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      if (!token) throw new Error("No token");
+      const headers = { Authorization: `Token ${token}` };
+      const [usuariosRes, flujosRes, reportesRes, kpisRes] = await Promise.all([
+        axios.get(`${API_BASE}/admin/usuarios/`, { headers }),
+        axios.get(`${API_BASE}/documents/flows/`, { headers }),
+        axios.get(`${API_BASE}/admin/reportes/`, { headers }),
+        axios.get(`${API_BASE}/admin/kpis/`, { headers }),
+      ]);
+
+      setUsuarios(usuariosRes.data);  // ← FIX: Usa setUsuarios (silencia unused)
+      setEtapasFlujo(flujosRes.data);  // ← FIX: Usa setEtapasFlujo
+      setReportes(reportesRes.data);  // ← FIX: Usa setReportes
+      setKpis(kpisRes.data);  // ← FIX: Usa setKpis
+      setHistorial(kpisRes.data.historial || []);  // ← FIX: Usa setHistorial
+      // Gráficos de data (ajusta si backend retorna)
+      setTiempoData(kpisRes.data.tiempo_data || []);
+      setRechazosData(kpisRes.data.rechazos_data || []);
+    } catch (error: any) {
+      setError(error.response?.data?.non_field_errors?.[0] || "Error al cargar datos");
+    } finally {
+      setLoading(false);
+    }
+  };
+  fetchData();
+}, [token]);
 
   const sectionMap: Record<string, string> = {
     "KPIs": "kpis",
@@ -91,66 +109,65 @@ export default function AuditorPanel() {
   };
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+const renderKPIs = () => (
+  <div className="grid gap-6 md:grid-cols-3">  {/* Responsive */}
+    <Card className="shadow-lg">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-sm font-medium text-gray-600">Tiempo Promedio de Ciclo</CardTitle>
+        <TrendingUp className="h-4 w-4 text-[#3B82F6]" />
+      </CardHeader>
+      <CardContent>
+        <div className="text-3xl font-bold text-[#10B981]">{kpis.tiempo || "0 días"}</div>  // ← FIX: Usa kpis.tiempo (silencia warning)
+        <p className="text-xs text-gray-500">Usuarios: {usuarios.length || 0}</p>  // ← FIX: Usa usuarios.length
+      </CardContent>
+    </Card>
 
-  const renderKPIs = () => (
-    <div className="grid gap-6 md:grid-cols-3">  {/* ← Ya responsive */}
-      <Card className="shadow-lg">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium text-gray-600">Tiempo Promedio de Ciclo</CardTitle>
-          <TrendingUp className="h-4 w-4 text-[#3B82F6]" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-3xl font-bold text-[#10B981]">0 días</div>  // ← DINÁMICO (de API)
-          <p className="text-xs text-gray-500">Sin datos aún</p>  // ← PLACEHOLDER
-        </CardContent>
-      </Card>
+    <Card className="shadow-lg">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-sm font-medium text-gray-600">% de Rechazos</CardTitle>
+        <BarChart3 className="h-4 w-4 text-[#3B82F6]" />
+      </CardHeader>
+      <CardContent>
+        <div className="text-3xl font-bold text-[#10B981]">{kpis.cumplimiento || "0%"}</div>  // ← FIX: Usa kpis.cumplimiento
+        <p className="text-xs text-gray-500">Documentos: {kpis.documentos || 0}</p>  // ← FIX: Usa kpis.documentos
+      </CardContent>
+    </Card>
 
-      <Card className="shadow-lg">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium text-gray-600">% de Rechazos</CardTitle>
-          <BarChart3 className="h-4 w-4 text-[#3B82F6]" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-3xl font-bold text-[#10B981]">0%</div>  // ← DINÁMICO
-          <p className="text-xs text-gray-500">Sin datos aún</p>
-        </CardContent>
-      </Card>
+    <Card className="shadow-lg">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-sm font-medium text-gray-600">Documentos Auditados</CardTitle>
+        <FileText className="h-4 w-4 text-[#3B82F6]" />
+      </CardHeader>
+      <CardContent>
+        <div className="text-3xl font-bold text-[#10B981]">{etapasFlujo.length || 0}</div>  // ← FIX: Usa etapasFlujo.length
+        <p className="text-xs text-gray-500">Reportes: {reportes.length || 0}</p>  // ← FIX: Usa reportes.length
+      </CardContent>
+    </Card>
 
-      <Card className="shadow-lg">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium text-gray-600">Documentos Auditados</CardTitle>
-          <FileText className="h-4 w-4 text-[#3B82F6]" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-3xl font-bold text-[#10B981]">0</div>  // ← DINÁMICO
-          <p className="text-xs text-gray-500">Sin datos aún</p>
-        </CardContent>
-      </Card>
-
-      {/* Gráficos: Si vacío, placeholder */}
-      <Card className="md:col-span-3">
-        <CardHeader>
-          <CardTitle>Tendencias de Tiempo de Ciclo</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {tiempoData.length === 0 ? (
-            <p className="text-center text-slate-500 py-8">No hay datos para mostrar en el gráfico.</p>  // ← NUEVO: Placeholder
-          ) : (
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={tiempoData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="mes" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="dias" stroke="#10B981" strokeWidth={3} />
-              </LineChart>
-            </ResponsiveContainer>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  );
+    {/* Gráficos: Usa data de states */}
+    <Card className="md:col-span-3">
+      <CardHeader>
+        <CardTitle>Tendencias de Tiempo de Ciclo</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {tiempoData.length === 0 ? (
+          <p className="text-center text-slate-500 py-8">No hay datos para mostrar en el gráfico.</p>
+        ) : (
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={tiempoData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="mes" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Line type="monotone" dataKey="dias" stroke="#10B981" strokeWidth={3} />
+            </LineChart>
+          </ResponsiveContainer>
+        )}
+      </CardContent>
+    </Card>
+  </div>
+);
 
   const renderReportes = () => (
     <Card className="shadow-lg">

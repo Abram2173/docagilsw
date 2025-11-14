@@ -18,7 +18,7 @@ import { FileText, Save, Send, Bell, CheckCircle2, Loader2 } from "lucide-react"
 import { QRGenerator } from "@/components/qr-generator";
 import { generateFolio, generateQRData } from "@/lib/folio-generator";
 
-const API_BASE = "http://127.0.0.1:8000/api";
+const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";  // Render en prod
 
 const sidebarItems = [
   { label: "Crear Trámite", href: "/solicitante", icon: "➕" },
