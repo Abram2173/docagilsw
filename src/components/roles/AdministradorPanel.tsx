@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";  // Para fetch – npm i axios si no lo tienes
 // import QRCode from 'qrcode.react';  // Descomenta si quieres QR: npm i qrcode.react @types/qrcode.react
-import { DashboardHeader } from "@/components/dashboard-header";
 import { DashboardSidebar } from "@/components/dashboard-sidebar";
 import { DashboardFooter } from "@/components/dashboard-footer";
 import { Button } from "@/components/ui/button";
@@ -19,7 +18,7 @@ interface AdministradorPanelProps {
   role: string;
 }
 
-export default function AdministradorPanel({ userName, role }: AdministradorPanelProps) {  // ← FIX: Props con interface
+export default function AdministradorPanel({  }: AdministradorPanelProps) {  // ← FIX: Props con interface
   const [currentSection, setCurrentSection] = useState("usuarios");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [usuarios, setUsuarios] = useState<any[]>([]);
@@ -91,7 +90,6 @@ useEffect(() => {
     }
   };
 
-  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
   const renderUsuarios = () => (
     <Card className="animate-in fade-in slide-in-from-bottom-4 border-2 border-slate-200 shadow-slate-100 duration-700">
@@ -450,11 +448,11 @@ useEffect(() => {
 
 return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-slate-50 via-white to-sky-50/20">
-      <DashboardHeader 
+{  /*    <DashboardHeader 
         userName={userName} 
         role={role} 
         onMenuToggle={toggleSidebar}
-      />  // ← FIX: Props dinámicas
+      /> */ }
       <div className="flex flex-1">
         <DashboardSidebar 
           items={sidebarItems.map(item => ({

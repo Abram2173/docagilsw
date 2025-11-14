@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { cn } from "@/lib/utils";
-import { DashboardHeader } from "@/components/dashboard-header";
 import { DashboardSidebar } from "@/components/dashboard-sidebar";
 import { DashboardFooter } from "@/components/dashboard-footer";
 import { Button } from "@/components/ui/button";
@@ -26,7 +25,7 @@ interface AprobadorPanelProps {
   role: string;
 }
 
-  export default function AprobadorPanel({ userName, role }: AprobadorPanelProps) {  // ← FIX: Props con interface
+  export default function AprobadorPanel({  }: AprobadorPanelProps) {  // ← FIX: Props con interface
   const [currentSection, setCurrentSection] = useState<string>("pendientes");
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [comentario, setComentario] = useState<string>("");
@@ -280,8 +279,8 @@ interface AprobadorPanelProps {
 
 return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-blue-50 via-white to-blue-50/20">
-      <DashboardHeader userName={userName} role={role} onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)} />  // ← FIX: Props dinámicas
-      <div className="flex flex-1">
+{  /*    <DashboardHeader userName={userName} role={role} onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)} />  // ← FIX: Props dinámicas
+*/}      <div className="flex flex-1">
         <DashboardSidebar 
           items={sidebarItems.map((item) => ({
             ...item,
