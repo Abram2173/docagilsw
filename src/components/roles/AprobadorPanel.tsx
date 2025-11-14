@@ -20,7 +20,13 @@ const sidebarItems = [
   { label: "Notificaciones", href: "/aprobador/notificaciones", icon: "🔔" },
 ];
 
-export default function AprobadorPanel() {
+// ← FIX: Interface props para userName/role
+interface AprobadorPanelProps {
+  userName: string;
+  role: string;
+}
+
+  export default function AprobadorPanel({ userName, role }: AprobadorPanelProps) {  // ← FIX: Props con interface
   const [currentSection, setCurrentSection] = useState<string>("pendientes");
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [comentario, setComentario] = useState<string>("");
@@ -272,9 +278,9 @@ export default function AprobadorPanel() {
     }
   };
 
-  return (
+return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-blue-50 via-white to-blue-50/20">
-      <DashboardHeader userName="Aprobador" role="Rol: Aprobador" onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
+      <DashboardHeader userName={userName} role={role} onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)} />  // ← FIX: Props dinámicas
       <div className="flex flex-1">
         <DashboardSidebar 
           items={sidebarItems.map((item) => ({

@@ -13,7 +13,13 @@ import { cn } from "@/lib/utils";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api" + "/";  // Render en prod
 
-export default function AdministradorPanel() {
+// ← FIX: Interface props para userName/role
+interface AdministradorPanelProps {
+  userName: string;
+  role: string;
+}
+
+export default function AdministradorPanel({ userName, role }: AdministradorPanelProps) {  // ← FIX: Props con interface
   const [currentSection, setCurrentSection] = useState("usuarios");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [usuarios, setUsuarios] = useState<any[]>([]);
@@ -24,6 +30,7 @@ export default function AdministradorPanel() {
   const [error, setError] = useState<string | null>(null);
 
   const token = localStorage.getItem("token");
+
 
 useEffect(() => {
   const fetchData = async () => {
@@ -441,13 +448,13 @@ useEffect(() => {
     { label: "Mantenimiento", href: "/administrador", icon: "⚙️" },
   ];
 
-  return (
+return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-slate-50 via-white to-sky-50/20">
       <DashboardHeader 
-        userName="Administrador" 
-        role="Rol: Administrador" 
+        userName={userName} 
+        role={role} 
         onMenuToggle={toggleSidebar}
-      />
+      />  // ← FIX: Props dinámicas
       <div className="flex flex-1">
         <DashboardSidebar 
           items={sidebarItems.map(item => ({

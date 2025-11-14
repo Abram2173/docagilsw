@@ -26,7 +26,12 @@ const sidebarItems = [
   { label: "Notificaciones", href: "/solicitante/notificaciones", icon: "🔔" },
 ];
 
-export default function SolicitantePanel() {
+interface SolicitantePanelProps {
+  userName: string;
+  role: string;
+}
+
+export default function SolicitantePanel({ userName, role }: SolicitantePanelProps) {
   const navigate = useNavigate();  // ← AGREGADO: Para redirect
   const [currentSection, setCurrentSection] = useState("crear");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -43,7 +48,6 @@ export default function SolicitantePanel() {
   const [error, setError] = useState<string | null>(null);
 
   const token = localStorage.getItem("token");
-  const role = localStorage.getItem("role");  // ← AGREGADO: Role del localStorage
 
   // ← AGREGADO: Role Check + Redirect
   useEffect(() => {
@@ -350,7 +354,7 @@ useEffect(() => {
 
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-gray-50 via-white to-green-50/20">
-      <DashboardHeader userName="Solicitante" role="Rol: Solicitante" onMenuToggle={toggleSidebar} />
+      <DashboardHeader userName={userName} role={role} onMenuToggle={toggleSidebar} />  // ← Ya con props
       <div className="flex flex-1">
         <DashboardSidebar 
           items={sidebarItems.map((item) => ({

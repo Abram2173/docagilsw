@@ -32,21 +32,22 @@ const sidebarItems = [
   { label: "Bitácora Global", href: "/auditor/bitacora", icon: "📋" },
 ];
 
-// Datos hardcodeados REMOVIDOS: Ahora estados vacíos para fetch dinámico
-// const initialHistorial = [...] ← BORRADO
-// const tiempoCicloData = [...] ← BORRADO
-// const rechazosData = [...] ← BORRADO
+// ← FIX: Interface props para userName/role
+interface AuditorPanelProps {
+  userName: string;
+  role: string;
+}
 
-export default function AuditorPanel() {
+export default function AuditorPanel({ userName, role }: AuditorPanelProps) {  // ← FIX: Props con interface
   const [currentSection, setCurrentSection] = useState("kpis");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [usuarios, setUsuarios] = useState([]);  // ← FIX: State para usuarios
-  const [etapasFlujo, setEtapasFlujo] = useState([]);  // ← FIX: State para flujos
-  const [reportes, setReportes] = useState([]);  // ← State para reportes
-  const [kpis, setKpis] = useState({ usuarios: 0, documentos: 0, tiempo: "0 días", cumplimiento: "0%" });  // ← FIX: State para KPIs
-  const [historial, setHistorial] = useState([]);  // ← FIX: State para historial (úsalo en fetch si lo tienes)
-  const [tiempoData, setTiempoData] = useState([]);  // Para gráficos
-  const [rechazosData, setRechazosData] = useState([]);  // Para rechazos
+  const [usuarios, setUsuarios] = useState([]);
+  const [etapasFlujo, setEtapasFlujo] = useState([]);
+  const [reportes, setReportes] = useState([]);
+  const [kpis, setKpis] = useState({ usuarios: 0, documentos: 0, tiempo: "0 días", cumplimiento: "0%" });
+  const [historial, setHistorial] = useState([]);
+  const [tiempoData, setTiempoData] = useState([]);
+  const [rechazosData, setRechazosData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -321,7 +322,7 @@ const renderKPIs = () => (
 
   return (
     <div className="flex min-h-screen flex-col">
-      <DashboardHeader userName="Auditor" role="Rol: Auditor" onMenuToggle={toggleSidebar} />  {/* ← Pasando toggle */}
+<DashboardHeader userName={userName} role={role} onMenuToggle={toggleSidebar} />  // ← FIX: Props dinámicas
       <div className="flex flex-1">
         <DashboardSidebar 
           items={sidebarItems.map((item) => ({

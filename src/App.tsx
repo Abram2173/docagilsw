@@ -39,21 +39,21 @@ function App() {
         element={
           isLoggedIn ? (
             <div>
-              <DashboardHeader userName={fullName} role={role} onMenuToggle={logout} />  // ← Ya con import, TS OK
-              {role === 'solicitante' ? <SolicitantePanel /> :
-               role === 'aprobador' ? <AprobadorPanel /> :
-               role === 'auditor' ? <AuditorPanel /> :
-               role === 'admin' ? <AdministradorPanel /> :
-               <Navigate to="/auth?tab=login" replace />}
+              <DashboardHeader userName={fullName} role={role} onMenuToggle={logout} />
+              {role === 'solicitante' ? <SolicitantePanel userName={fullName} role={role} /> :  // ← Ya pasa props
+              role === 'aprobador' ? <AprobadorPanel userName={fullName} role={role} /> :
+              role === 'auditor' ? <AuditorPanel userName={fullName} role={role} /> :
+              role === 'admin' ? <AdministradorPanel userName={fullName} role={role} /> :
+              <Navigate to="/auth?tab=login" replace />}
             </div>
           ) : <Navigate to="/auth?tab=login" replace />
         }
       />
       {/* Resto rutas igual */}
-      <Route path="/solicitante" element={isLoggedIn && role === 'solicitante' ? <SolicitantePanel /> : <Navigate to="/auth?tab=login" replace />} />
-      <Route path="/aprobador" element={isLoggedIn && role === 'aprobador' ? <AprobadorPanel /> : <Navigate to="/auth?tab=login" replace />} />
-      <Route path="/auditor" element={isLoggedIn && role === 'auditor' ? <AuditorPanel /> : <Navigate to="/auth?tab=login" replace />} />
-      <Route path="/administrador" element={isLoggedIn && role === 'admin' ? <AdministradorPanel /> : <Navigate to="/auth?tab=login" replace />} />
+      <Route path="/solicitante" element={isLoggedIn && role === 'solicitante' ? <SolicitantePanel userName={''} role={''} /> : <Navigate to="/auth?tab=login" replace />} />
+      <Route path="/aprobador" element={isLoggedIn && role === 'aprobador' ? <AprobadorPanel userName={''} role={''} /> : <Navigate to="/auth?tab=login" replace />} />
+      <Route path="/auditor" element={isLoggedIn && role === 'auditor' ? <AuditorPanel userName={''} role={''} /> : <Navigate to="/auth?tab=login" replace />} />
+      <Route path="/administrador" element={isLoggedIn && role === 'admin' ? <AdministradorPanel userName={''} role={''} /> : <Navigate to="/auth?tab=login" replace />} />
       <Route path="/cuenta" element={isLoggedIn ? <MiCuenta /> : <Navigate to="/auth?tab=login" replace />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
