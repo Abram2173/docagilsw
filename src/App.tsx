@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';  // ← FIX: useNavigate
 import Landing from './pages/Landing';  // ← Se queda, home
 import AuthPage from './pages/AuthPage';  // ← Login/register
 import SolicitantePanel from './components/roles/SolicitantePanel';
@@ -9,14 +9,22 @@ import MiCuenta from './pages/profile/MiCuenta';
 
 // Hook auth (token + role de localStorage)
 const useAuth = () => {
+  const navigate = useNavigate();  // ← FIX: Hook para logout/navigate
   const token = localStorage.getItem('token');
-  const role = localStorage.getItem('role');  // Guarda role post-login (de backend response)
+  const role = localStorage.getItem('role');
   const isLoggedIn = token !== null;
-  return { isLoggedIn, role };
+
+  const logout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    navigate('/auth?tab=login');
+  };
+
+  return { isLoggedIn, role, logout };
 };
 
 function App() {
-  const { isLoggedIn, role } = useAuth();
+  const { isLoggedIn, role } = useAuth();  // ← Usa logout si quieres botón
 
   return (
     <Routes>
