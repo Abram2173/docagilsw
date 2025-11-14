@@ -42,8 +42,7 @@ export function DashboardHeader({ userName, role, onMenuToggle }: DashboardHeade
             <User className="h-6 w-6 text-white" />
           </div>
           <div className="animate-in fade-in slide-in-from-left-4 duration-700">
-            <h1 className="text-2xl font-bold text-white drop-shadow-sm">Hola, {userName}</h1>
-            <div className="flex items-center gap-2 text-sm text-white/90">
+<p className="text-lg font-semibold text-white">Hola, {userName || 'Usuario'}</p>  // ← FIX: Fallback si no hay nombre            <div className="flex items-center gap-2 text-sm text-white/90">
               <Badge variant="secondary" className="bg-white/20 text-white backdrop-blur-sm">
                 {role}
               </Badge>
