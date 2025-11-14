@@ -53,32 +53,29 @@ export default function SolicitantePanel() {
     }
   }, [role, navigate]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        if (!token) throw new Error("No token");
-        const headers = { Authorization: `Token ${token}` };
-        const [tramitesRes, notifRes] = await Promise.all([
-          axios.get(`${API_BASE}/solicitante/tramites/`, { headers }),
-          axios.get(`${API_BASE}/solicitante/notificaciones/`, { headers })
-        ]);
-        setTramites(tramitesRes.data);
-        setNotificaciones(notifRes.data);
-        console.log("Datos de solicitante cargados!");
-      } catch (err) {
-        setError("Error al cargar: " + (err as Error).message);
-        console.error(err);
-        setTramites([]);
-        setNotificaciones([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (token && role === 'solicitante') fetchData();  // ← FIX: Solo si role correcto
-  }, [token, role]);
-
+useEffect(() => {
+  const fetchData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) throw new Error("No token");
+      const headers = { Authorization: `Token ${token}` };  // ← FIX: Headers con token
+      const [tramitesRes, notifsRes] = await Promise.all([
+        axios.get(`${API_BASE}/solicitante/tramites/`, { headers }),  // ← FIX: Headers
+        axios.get(`${API_BASE}/solicitante/notificaciones/`, { headers }),
+      ]);
+      setTramites(tramitesRes.data);
+      setNotificaciones(notifsRes.data);
+    } catch (error: any) {
+      console.log('Error fetchData:', error);  // ← FIX: Console, no logout
+      setError(error.response?.data?.non_field_errors?.[0] || "Error al cargar datos");
+    } finally {
+      setLoading(false);
+    }
+  };
+  fetchData();
+}, [token]);
   const sectionMap: Record<string, string> = {
     "Crear Trámite": "crear",
     "Mis Trámites": "tramites",

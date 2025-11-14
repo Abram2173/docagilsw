@@ -12,14 +12,14 @@ import {DashboardHeader} from './components/dashboard-header';  // ← FIX: Impo
 const useAuth = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
-  const role = localStorage.getItem('role') || 'usuario';  // ← FIX: Fallback a 'usuario' si null
-  const fullName = localStorage.getItem('full_name') || 'Usuario';
+  const role = localStorage.getItem('role') || 'usuario';
+  const fullName = localStorage.getItem('full_name') || 'Usuario';  // ← FIX: Lee nombre
   const isLoggedIn = token !== null;
 
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('role');
-    localStorage.removeItem('full_name');
+    localStorage.removeItem('full_name');  // ← Limpia nombre
     navigate('/auth?tab=login');
   };
 

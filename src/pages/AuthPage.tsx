@@ -130,19 +130,20 @@ export default function AuthPage() {
     }
     setIsSubmitting(true);
     setErrorMsg("");
-    try {
+try {
   const response = await axios.post(`${API_BASE}/auth/login/`, {
     username: loginUsername,
     password: loginPassword,
   });
-  const { token, role } = response.data;  // ← FIX: Quita 'user' si no lo usas (o agrega si backend lo retorna)
+  const { token, role, full_name } = response.data;  // ← FIX: Destruye full_name de backend
   localStorage.setItem('token', token);
-  localStorage.setItem('role', role);  // GUARDA ROLE PARA RUTAS
-  navigate('/dashboard');  // Redirige a dashboard
+  localStorage.setItem('role', role);
+  localStorage.setItem('full_name', full_name || loginUsername);  // ← FIX: Guarda nombre real
+  navigate('/dashboard');
 } catch (error: any) {
   setErrorMsg(error.response?.data?.non_field_errors?.[0] || "Credenciales inválidas");
   alert(errorMsg);
-} finally {
+}finally {
   setIsSubmitting(false);
   setShowMfa(false);
 }
