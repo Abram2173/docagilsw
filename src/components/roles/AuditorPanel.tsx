@@ -58,7 +58,11 @@ useEffect(() => {
     setError(null);
     try {
       const token = localStorage.getItem('token');
-      if (!token) throw new Error("No token");
+      if (!token) {
+        setError("No token – inicia sesión");
+        setLoading(false);
+        return;
+      }
       const headers = { Authorization: `Token ${token}` };  // ← FIX: Headers con token para todas calls
       const [usuariosRes, flujosRes, reportesRes, kpisRes] = await Promise.all([
         axios.get(`${API_BASE}/admin/usuarios/`, { headers }),  // ← FIX: Headers en GET
@@ -75,6 +79,7 @@ useEffect(() => {
       setTiempoData(kpisRes.data.tiempo_data || []);
       setRechazosData(kpisRes.data.rechazos_data || []);
     } catch (error: any) {
+      console.log('Error fetchData:', error);  // ← FIX: Console para debug, no logout
       setError(error.response?.data?.non_field_errors?.[0] || "Error al cargar datos");
     } finally {
       setLoading(false);
