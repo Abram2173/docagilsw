@@ -63,12 +63,12 @@ useEffect(() => {
         setLoading(false);
         return;
       }
-      const headers = { Authorization: `Token ${token}` };  // ← FIX: Headers con token para todas calls
+      const headers = { Authorization: `Token ${token}` };
       const [usuariosRes, flujosRes, reportesRes, kpisRes] = await Promise.all([
-        axios.get(`${API_BASE}/admin/usuarios/`, { headers }),  // ← FIX: Headers en GET
-        axios.get(`${API_BASE}/documents/flows/`, { headers }),
-        axios.get(`${API_BASE}/admin/reportes/`, { headers }),
-        axios.get(`${API_BASE}/admin/kpis/`, { headers }),
+        axios.get(`${API_BASE}/auditor/usuarios/`, { headers }),  // ← FIX: /auditor/usuarios/ (no /admin/)
+        axios.get(`${API_BASE}/documents/flows/`, { headers }),  // ← Ya 200, general
+        axios.get(`${API_BASE}/auditor/reportes/`, { headers }),  // ← FIX: /auditor/reportes/
+        axios.get(`${API_BASE}/auditor/kpis/`, { headers }),  // ← FIX: /auditor/kpis/
       ]);
 
       setUsuarios(usuariosRes.data);
@@ -79,7 +79,7 @@ useEffect(() => {
       setTiempoData(kpisRes.data.tiempo_data || []);
       setRechazosData(kpisRes.data.rechazos_data || []);
     } catch (error: any) {
-      console.log('Error fetchData:', error);  // ← FIX: Console para debug, no logout
+      console.log('Error fetchData:', error);  // ← FIX: Console, no logout
       setError(error.response?.data?.non_field_errors?.[0] || "Error al cargar datos");
     } finally {
       setLoading(false);
