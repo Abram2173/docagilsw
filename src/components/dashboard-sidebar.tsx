@@ -1,53 +1,56 @@
 // src/components/dashboard-sidebar.tsx
 import { cn } from "@/lib/utils";
-import { Link } from "react-router-dom";
 
 interface SidebarItem {
   label: string;
-  href: string;
-  icon: string;
+  href?: string;                    // ← ahora opcional
+  icon: React.ReactNode;            // ← ahora acepta íconos de Lucide
+  isActive?: boolean;               // ← para resaltar sección activa
   onClick?: (e: React.MouseEvent) => void;
 }
 
 interface DashboardSidebarProps {
   items: SidebarItem[];
-  isOpen: boolean;  // ← NUEVO: Para mobile toggle
-  onClose: () => void;  // ← NUEVO: Cerrar en mobile
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 export function DashboardSidebar({ items, isOpen, onClose }: DashboardSidebarProps) {
   return (
     <>
-      {/* Overlay para mobile */}
+      {/* Overlay mobile */}
       {isOpen && (
-        <div 
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden" 
+        <div
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
           onClick={onClose}
         />
       )}
-      
+
       {/* Sidebar */}
-      <aside className={cn(
-        "fixed inset-y-0 left-0 z-50 w-64 border-r border-slate-200 bg-slate-500 p-4 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-auto",
-        isOpen ? "translate-x-0" : "-translate-x-full"  // ← Slide in/out en mobile
-      )}>
-        <nav className="space-y-2">
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 w-64 border-r border-slate-200 bg-slate-800 p-6 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-auto",
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        <nav className="space-y-3">
           {items.map((item, index) => (
-            <Link
+            <div
               key={`${item.label}-${index}`}
-              to={item.href}
               onClick={(e) => {
-                if (item.onClick) item.onClick(e);
-                onClose();  // ← Cierra en mobile al clickear
+                item.onClick?.(e);
+                onClose(); // Cierra en móvil
               }}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-4 py-3 text-white transition-all hover:bg-slate-700 hover:scale-105 focus:bg-slate-700 focus:outline-none",
-                "focus:outline-none"
+                "flex items-center gap-4 rounded-xl px-5 py-4 text-white transition-all cursor-pointer",
+                item.isActive
+                  ? "bg-green-600 shadow-lg font-semibold"
+                  : "hover:bg-slate-700 hover:scale-105"
               )}
             >
               <span className="text-xl">{item.icon}</span>
-              <span>{item.label}</span>
-            </Link>
+              <span className="text-lg">{item.label}</span>
+            </div>
           ))}
         </nav>
       </aside>
