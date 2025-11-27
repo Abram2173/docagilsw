@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";  // ← AGREGADO: Para navigate
 import { cn } from "@/lib/utils";
-import { DashboardHeader } from "@/components/dashboard-header";
 import { DashboardSidebar } from "@/components/dashboard-sidebar";
 import { DashboardFooter } from "@/components/dashboard-footer";
 import { Button } from "@/components/ui/button";
@@ -31,7 +30,7 @@ interface SolicitantePanelProps {
   role: string;
 }
 
-export default function SolicitantePanel({ userName, role }: SolicitantePanelProps) {
+export default function SolicitantePanel({ role }: SolicitantePanelProps) {
   const navigate = useNavigate();  // ← AGREGADO: Para redirect
   const [currentSection, setCurrentSection] = useState("crear");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -142,7 +141,6 @@ useEffect(() => {
     }
   };
 
-  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
   const renderCrearTramite = () => (
     <Card className="animate-in fade-in slide-in-from-bottom-4 border-2 border-[#3B82F6]/20 shadow-xl duration-700">
@@ -354,7 +352,6 @@ useEffect(() => {
 
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-gray-50 via-white to-green-50/20">
-      <DashboardHeader userName={userName} role={role} onMenuToggle={toggleSidebar} />  // ← Ya con props
       <div className="flex flex-1">
         <DashboardSidebar 
           items={sidebarItems.map((item) => ({

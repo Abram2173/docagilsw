@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";  // ← Agregado: Para clases condicionales
-import { DashboardHeader } from "@/components/dashboard-header";
 import { DashboardSidebar } from "@/components/dashboard-sidebar";
 import { DashboardFooter } from "@/components/dashboard-footer";
 import { Button } from "@/components/ui/button";
@@ -38,7 +37,7 @@ interface AuditorPanelProps {
   role: string;
 }
 
-export default function AuditorPanel({ userName, role }: AuditorPanelProps) {  // ← FIX: Props con interface
+export default function AuditorPanel({}: AuditorPanelProps) {  // ← FIX: Props con interface
   const [currentSection, setCurrentSection] = useState("kpis");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [usuarios, setUsuarios] = useState([]);
@@ -114,7 +113,6 @@ useEffect(() => {
     alert("Exportando datos a CSV...");  // ← En real: API
   };
 
-  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 const renderKPIs = () => (
   <div className="grid gap-6 md:grid-cols-3">  {/* Responsive */}
     <Card className="shadow-lg">
@@ -322,7 +320,6 @@ const renderKPIs = () => (
 
   return (
     <div className="flex min-h-screen flex-col">
-<DashboardHeader userName={userName} role={role} onMenuToggle={toggleSidebar} />  // ← FIX: Props dinámicas
       <div className="flex flex-1">
         <DashboardSidebar 
           items={sidebarItems.map((item) => ({
