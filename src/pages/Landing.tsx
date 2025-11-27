@@ -1,191 +1,141 @@
-// src/pages/Landing.tsx - Hero unificado con solo animación de fondo (sin separación ni duplicados)
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+// src/pages/Landing.tsx
+"use client"
 
+import { useEffect, useRef } from "react"
+import { Link } from "react-router-dom"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { CheckCircle, FileCheck, GitBranch, Shield, Sparkles, Lightbulb } from "lucide-react"
 export default function Landing() {
-  const teamMembers = [
-    { name: "Abram Ortiz Martínez", initials: "AO" },
-    { name: "José Jerónimo Medrano Flores", initials: "JM" },
-    { name: "Jesús Abdiel Chapa Cruz", initials: "JC" },
-  ];
+  const cardsRef = useRef<HTMLDivElement>(null)
+  const heroRef = useRef<HTMLDivElement>(null)
 
-  const projectSections = [
-    {
-      id: "1",
-      icon: "📋",
-      title: "Introducción / Información del Proyecto",
-      description:
-        "DocFlow automatiza la gestión de documentos internos, eliminando procesos manuales y estableciendo flujos de trabajo estructurados.",
-    },
-    {
-      id: "2",
-      icon: "👥",
-      title: "Stakeholders / Actores Involucrados",
-      description:
-        "Usuarios iniciadores, revisores, aprobadores, auditores y administradores con permisos y responsabilidades específicas.",
-    },
-    {
-      id: "3",
-      icon: "⚙️",
-      title: "Requerimientos Funcionales",
-      description:
-        "Flujo de 6 etapas: Iniciación, Revisión, Asignación, Aprobación, Auditoría y Finalización con trazabilidad completa.",
-    },
-    {
-      id: "4",
-      icon: "🛡️",
-      title: "Requerimientos No Funcionales",
-      description:
-        "Rendimiento < 2s, seguridad robusta, escalabilidad para 1000+ usuarios, 99.9% uptime y usabilidad intuitiva.",
-    },
-    {
-      id: "5",
-      icon: "🔍",
-      title: "Recolección de Información / Técnicas",
-      description:
-        "Entrevistas, análisis de procesos, encuestas y workshops colaborativos para identificar necesidades clave.",
-    },
-    {
-      id: "6",
-      icon: "📊",
-      title: "Clasificación y Priorización",
-      description:
-        "Requerimientos clasificados por criticidad e impacto, priorizados según viabilidad técnica y dependencias.",
-    },
-  ];
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("animate-fade-in-up")
+          }
+        })
+      },
+      { threshold: 0.1, rootMargin: "0px 0px -50px 0px" }
+    )
+
+    if (cardsRef.current) {
+      cardsRef.current.querySelectorAll(".feature-card").forEach((card) => observer.observe(card))
+    }
+    if (heroRef.current) observer.observe(heroRef.current)
+
+    return () => observer.disconnect()
+  }, [])
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle,rgba(2,0,36,1),rgba(37,37,230,1),rgba(0,212,255,1))] relative overflow-hidden">
-      {/* Hero Section - Solo animación de fondo, contenido encima sin separación */}
-      <section className="relative px-6 py-16 md:py-24 min-h-[80vh]">
-        {/* Contenido del Hero - z-20, sin animaciones que causen glitches */}
-        <div className="mx-auto max-w-6xl text-center relative z-20">
-        <h1
-          className="mb-6 font-poppins text-5xl font-bold text-white md:text-6xl lg:text-7xl drop-shadow-lg"
-          style={{ 
-            WebkitTextStroke: "1px black",
-            textShadow: "2px 2px 4px rgba(0,0,0,0.5)"
-          }}
-        >
-          Dart
-        </h1>
-          <p className="mb-8 text-2xl font-medium text-[#FFFFFF] md:text-3xl">
-            Automatiza tus documentos internos y reduce tiempos en 50%
+    <div className="min-h-screen bg-gradient-to-br from-white via-sky-50/30 to-emerald-50/30">
+      <main className="container mx-auto px-4 py-12 md:py-20 max-w-7xl">
+        {/* Logo + Título */}
+        <div className="flex justify-center mb-12">
+          <div className="flex items-center gap-4 group">
+            <div className="relative">
+              <Lightbulb className="w-16 h-16 md:w-20 md:h-20 text-[#0EA5E9] fill-[#0EA5E9] animate-pulse-slow" />
+              <Sparkles className="w-8 h-8 text-[#10B981] absolute -top-2 -right-2 animate-bounce-slow" />
+            </div>
+            <h1 className="text-6xl md:text-8xl font-bold bg-gradient-to-r from-[#0EA5E9] to-[#10B981] bg-clip-text text-transparent">
+              Dart
+            </h1>
+          </div>
+        </div>
+
+        {/* Hero */}
+        <div ref={heroRef} className="text-center mb-20 opacity-0">
+          <h2 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+            Dart – Gestión Documental Inteligente
+          </h2>
+          <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-4xl mx-auto">
+            Cumplimiento ISO automático • Flujos multinivel • 100% digital
           </p>
-          <div className="flex justify-center gap-4">
-            {/* ← CAMBIO: Link a /auth con tab=register */}
-            <Link to="/auth?tab=register">
-              <Button
-                size="lg"
-                className="bg-[#10B981] px-10 py-7 text-xl font-semibold text-white shadow-lg transition-all hover:bg-[#0A0480] hover:shadow-xl"
-              >
-                Registrarse
-              </Button>
-            </Link>
-            {/* ← CAMBIO: Link a /auth con tab=login */}
+
+          {/* Ilustración central */}
+          <div className="relative max-w-3xl mx-auto h-2 mb-16">
+            <div className="absolute inset-0 flex items-center justify-center">
+              {/* Documentos flotantes */}
+              {[...Array(8)].map((_, i) => (
+                <div
+                  key={i}
+                  className="absolute w-10 h-14 bg-white rounded-lg shadow-lg border border-gray-200 animate-float-document"
+                  style={{
+                    left: `${20 + Math.cos((i * Math.PI) / 4) * 45}%`,
+                    top: `${30 + Math.sin((i * Math.PI) / 4) * 40}%`,
+                    animationDelay: `${i * 0.2}s`,
+                  }}
+                >
+                  <div className="w-4/5 h-1 bg-gray-300 rounded mt-3 mx-auto"></div>
+                  <div className="w-3/5 h-1 bg-gray-200 rounded mt-2 mx-auto"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Botones */}
+          <div className="flex flex-col sm:flex-row gap-6 justify-center">
             <Link to="/auth?tab=login">
-              <Button
-                size="lg"
-                variant="outline"
-                className="px-10 py-7 text-xl font-semibold text-[#3B82F6] border-[#3B82F6] hover:bg-[#10B981] hover:text-white"
-              >
+              <Button size="lg" className="bg-[#0EA5E9] hover:bg-[#0EA5E9]/90 text-white text-xl px-12 py-7 rounded-xl shadow-xl hover:shadow-2xl hover:scale-105 transition-all">
                 Iniciar Sesión
               </Button>
             </Link>
+            <Link to="/auth?tab=register">
+              <Button size="lg" variant="outline" className="bg-white text-[#10B981] border-[#10B981] hover:bg-[#10B981] hover:text-white text-xl px-12 py-7 rounded-xl shadow-xl hover:shadow-2xl hover:scale-105 transition-all">
+                Solicitar Demo
+              </Button>
+            </Link>
           </div>
         </div>
-      </section>
 
-{/* Team Section */}
-<section className="px-6 py-12">
-  <div className="mx-auto max-w-6xl">
-    <h2 className="mb-8 text-center text-3xl font-bold text-[#10B981]">Equipo de Desarrollo:</h2>
-    <div className="flex flex-wrap justify-center gap-8">
-      {teamMembers.map((member, index) => (
-        <div key={index} className="flex flex-col items-center gap-3 text-center">
-          <Avatar className="h-28 w-28 bg-[#3B82F6] shadow-lg">
-            <AvatarFallback className="text-2xl font-bold text-white">
-              {member.initials}
-            </AvatarFallback>
-          </Avatar>
-          <p className="font-semibold text-white">{member.name}</p> {/* ¡Aquí el cambio: text-white! */}
+        {/* Features */}
+        <div ref={cardsRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-20">
+          {[
+            { icon: GitBranch, title: "Control de Versiones", desc: "Seguimiento automático de cada cambio" },
+            { icon: CheckCircle, title: "Aprobación Multinivel", desc: "Flujos personalizados por tu estructura" },
+            { icon: FileCheck, title: "Trazabilidad Total", desc: "Auditoría completa de cada acción" },
+            { icon: Shield, title: "Auditoría Automática", desc: "Reportes ISO listos al instante" },
+          ].map((item, i) => (
+            <Card key={i} className={`feature-card opacity-0 border-gray-200 hover:border-[#10B981] transition-all hover:shadow-2xl group`} style={{ animationDelay: `${i * 0.1}s` }}>
+              <CardContent className="p-8 text-center">
+                <div className="w-20 h-20 bg-gradient-to-br from-[#0EA5E9] to-[#10B981] rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                  <item.icon className="w-10 h-10 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">{item.title}</h3>
+                <p className="text-gray-600">{item.desc}</p>
+              </CardContent>
+            </Card>
+          ))}
         </div>
-      ))}
-    </div>
-  </div>
-</section>
 
-      {/* Project Index Section */}
-      <section className="px-6 py-16">
-        <div className="mx-auto max-w-6xl">
-          <h2 className="mb-12 text-center text-4xl font-bold text-[#10B981]">Índice del Proyecto</h2>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {projectSections.map((section, index) => (
-              <Card
-                key={section.id}
-                className="animate-in fade-in bg-[#3B82F6] shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl"
-                style={{ animationDelay: `${index * 100}ms` } as React.CSSProperties}
-              >
-                <CardContent className="p-6">
-                  <div className="mb-4 text-5xl">{section.icon}</div>
-                  <h3 className="mb-3 text-xl font-bold text-[#10B981]">{section.title}</h3>
-                  <p className="leading-relaxed text-white">{section.description}</p>
-                </CardContent>
-              </Card>
-            ))}
+        {/* Sección final */}
+        <div className="text-center py-16 bg-white/70 rounded-3xl backdrop-blur-sm border border-gray-100 shadow-2xl">
+          <h3 className="text-4xl font-bold text-gray-900 mb-6">
+            Transforma tu institución con Dart
+          </h3>
+          <p className="text-xl text-gray-600 mb-10 max-w-4xl mx-auto">
+            Digitaliza, automatiza y cumple con ISO 9001/27001 sin esfuerzo. Tu equipo lo amará.
+          </p>
+          <div className="flex flex-wrap justify-center gap-8 text-lg text-gray-600">
+            <div className="flex items-center gap-3"><CheckCircle className="w-8 h-8 text-[#10B981]" /> Sin instalación</div>
+            <div className="flex items-center gap-3"><CheckCircle className="w-8 h-8 text-[#10B981]" /> Acceso desde cualquier dispositivo</div>
+            <div className="flex items-center gap-3"><CheckCircle className="w-8 h-8 text-[#10B981]" /> Soporte especializado</div>
           </div>
         </div>
-      </section>
+      </main>
 
-      {/* CTA Section */}
-      <section className="px-6 py-16">
-        <div className="mx-auto max-w-6xl text-center">
-          {/* ← CAMBIO: Link a /auth con tab=login */}
-          <Link to="/auth?tab=login">
-            <Button
-              size="lg"
-              className="animate-pulse bg-[#10B981] px-12 py-8 text-2xl font-bold text-white shadow-2xl transition-all hover:scale-110 hover:bg-[#0A0480]"
-            >
-              Iniciar Sesión
-            </Button>
-          </Link>
-          {/* ← CAMBIO: Link a /auth con tab=register */}
-          <Link to="/auth?tab=register" className="ml-4">
-            <Button
-              size="lg"
-              variant="outline"
-              className="px-12 py-8 text-2xl font-bold text-[#3B82F6] border-[#3B82F6] hover:bg-[#10B981] hover:text-white"
-            >
-              Registrarse
-            </Button>
-          </Link>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="border-t border-gray-200 bg-white px-6 py-10">
-        <div className="mx-auto max-w-6xl">
-          <div className="mb-6 text-center">
-            <h3 className="text-3xl font-bold text-[#10B981]">DocAgil</h3>
+      <footer className="bg-gray-900 text-white py-12 mt-24">
+        <div className="container mx-auto px-4 text-center">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <Lightbulb className="w-8 h-8 text-[#0EA5E9] fill-[#0EA5E9]" />
+            <span className="text-2xl font-bold">Dart</span>
           </div>
-          <div className="mb-4 flex justify-center gap-6">
-            <a href="#" className="font-medium text-[#3B82F6] transition-colors hover:text-[#10B981]">
-              Contacto
-            </a>
-            <a href="#" className="font-medium text-[#3B82F6] transition-colors hover:text-[#10B981]">
-              Soporte
-            </a>
-            <a href="#" className="font-medium text-[#3B82F6] transition-colors hover:text-[#10B981]">
-              Documentación
-            </a>
-          </div>
-          <p className="text-center text-gray-600">Desarrollado por el equipo DocFlow</p>
-          <p className="mt-2 text-center text-sm text-gray-500">© 2025 DocFlow. Todos los derechos reservados.</p>
+          <p className="text-gray-400">© 2025 Dart • Desarrollado con pasión para la educación</p>
         </div>
       </footer>
     </div>
-  );
+  )
 }
