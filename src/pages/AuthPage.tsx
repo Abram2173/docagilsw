@@ -154,12 +154,12 @@ const handleRegisterSubmit = async (e: React.FormEvent) => {
     <div className="min-h-screen flex items-center justify-center p-8 lg:p-16 bg-gradient-to-br from-sky-50 via-white to-emerald-50">
       <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-200 p-8 lg:p-12">
         {/* Greeting */}
-<div className="text-center mb-10 -mt-64"> {/* ← ESTE -mt-16 SUBE TODO */}            {/* Fondo negro para que el logo azul/brillante resalte */}
+          <div className="text-center mb-10 -mt-16"> {/* ← ESTE -mt-16 SUBE TODO */}            {/* Fondo negro para que el logo azul/brillante resalte */}
           <div className="mx-auto mx-8 flex justify-center">
             <img 
               src={logo} 
               alt="Dart" 
-              className="w-54 h-54 object-contain"
+              className="w-48 h-54 object-contain"
             />
           </div>
               
