@@ -1,5 +1,6 @@
 // src/pages/AuthPage.tsx
 import React, { useState } from "react";
+import logo from '../assets/logo.png'; // ajustar ruta
 import { useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
@@ -153,7 +154,15 @@ const handleRegisterSubmit = async (e: React.FormEvent) => {
     <div className="min-h-screen flex items-center justify-center p-8 lg:p-16 bg-gradient-to-br from-sky-50 via-white to-emerald-50">
       <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-200 p-8 lg:p-12">
         {/* Greeting */}
-        <div className="mb-10 text-center">
+<div className="text-center mb-10 -mt-64"> {/* ← ESTE -mt-16 SUBE TODO */}            {/* Fondo negro para que el logo azul/brillante resalte */}
+          <div className="mx-auto mx-8 flex justify-center">
+            <img 
+              src={logo} 
+              alt="Dart" 
+              className="w-54 h-54 object-contain"
+            />
+          </div>
+              
           <h2 className="text-4xl font-bold text-slate-900 mb-2">
             {activeTab === "login" ? "¡Hola!" : "¡Crea tu Cuenta!"}
           </h2>
