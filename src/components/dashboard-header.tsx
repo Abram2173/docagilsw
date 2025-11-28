@@ -1,13 +1,14 @@
+// src/components/dashboard-header.tsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Bell, LogOut, User, Settings, Menu } from "lucide-react";  // ← Agregué Menu
+import { Bell, LogOut, User, Settings, Menu, Lightbulb, Sparkles } from "lucide-react";
 
 interface DashboardHeaderProps {
   userName: string;
   role: string;
-  onMenuToggle: () => void;  // ← NUEVO: Para hamburguesa
+  onMenuToggle: () => void;
 }
 
 export function DashboardHeader({ userName, role, onMenuToggle }: DashboardHeaderProps) {
@@ -15,105 +16,100 @@ export function DashboardHeader({ userName, role, onMenuToggle }: DashboardHeade
   const [showUserMenu, setShowUserMenu] = useState(false);
   const navigate = useNavigate();
 
+  // ← AHORA SÍ VA A /auth (PÁGINA DE LOGIN)
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    console.log('Logout: Token removido, yendo a home');
-    navigate("/");
+    localStorage.clear();
+    navigate("/auth");  // ← ESTO ES LO QUE QUERÍAS
   };
 
   return (
-    <header className="relative border-b border-sky-200/30 bg-gradient-to-r from-sky-500 via-sky-600 to-sky-500 px-4 lg:px-6 py-4 shadow-lg lg:pl-0">
+    <header className="relative border-b border-sky-200/30 bg-gradient-to-r from-neutral-100 via-sky-600 to-sky-500 px-4 lg:px-6 py-4 shadow-lg">
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjA1IiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-30" />
 
       <div className="relative flex items-center justify-between">
-        {/* ← NUEVO: Hamburguesa solo en mobile */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="lg:hidden text-white"
-          onClick={onMenuToggle}
-        >
-          <Menu className="h-6 w-6" />
-        </Button>
-
-        <div className="flex items-center gap-4">
-          <div className="flex h-12 w-12 animate-in zoom-in items-center justify-center rounded-full bg-white/20 backdrop-blur-sm ring-2 ring-white/30 duration-500">
-            <User className="h-6 w-6 text-white" />
+        {/* LOGO DART OFICIAL */}
+        <div className="flex items-center gap-3 group">
+          <div className="relative">
+            <Lightbulb className="w-10 h-10 md:w-12 md:h-12 text-[#0EA5E9] fill-[#0EA5E9] animate-pulse-slow" />
+            <Sparkles className="w-5 h-5 text-[#10B981] absolute -top-1 -right-1 animate-bounce-slow" />
           </div>
-          <div className="animate-in fade-in slide-in-from-left-4 duration-700">
-<p className="text-lg font-semibold text-white">Hola, {userName || 'Usuario'}</p>         <div className="flex items-center gap-2 text-sm text-white/90">
-              <Badge variant="secondary" className="bg-white/20 text-white backdrop-blur-sm">
-                {role}
-              </Badge>
-            </div>
+
+          <div className="flex items-baseline">
+            <span className="text-4xl md:text-5xl font-bold text-[#000000]" style={{ fontFamily: "'Libre Baskerville', serif" }}>
+              D
+            </span>
+            <span className="text-3xl md:text-4xl font-black text-[#000000] tracking-wider" style={{ fontFamily: "'Norwester', sans-serif", letterSpacing: "0.12em" }}>
+              ART
+            </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 animate-in fade-in slide-in-from-right-4 duration-700">
+        {/* BOTÓN MENÚ MÓVIL */}
+        <Button variant="ghost" size="icon" className="lg:hidden text-white hover:bg-white/20" onClick={onMenuToggle}>
+          <Menu className="h-7 w-7" />
+        </Button>
+
+        {/* USUARIO */}
+        <div className="flex items-center gap-4">
+          <div className="text-right">
+            <p className="text-lg font-semibold text-white">Hola, {userName || 'Usuario'}</p>
+            <Badge variant="secondary" className="bg-white/20 text-white backdrop-blur-sm">{role}</Badge>
+          </div>
+          <div className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center">
+            <User className="h-6 w-6 text-white" />
+          </div>
+        </div>
+
+        {/* NOTIFICACIONES + MENÚ + SALIR */}
+        <div className="flex items-center gap-3">
           <div className="relative">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative text-white transition-all hover:bg-white/20 hover:scale-110 active:scale-95"
-            >
+            <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
               <Bell className="h-5 w-5" />
             </Button>
             {notificationCount > 0 && (
-              <Badge className="absolute -right-1 -top-1 flex h-5 w-5 animate-pulse items-center justify-center rounded-full bg-red-500 p-0 text-[10px] font-bold text-white ring-2 ring-white">
+              <Badge className="absolute -right-1 -top-1 h-5 w-5 p-0 flex items-center justify-center bg-red-500 text-white text-xs font-bold">
                 {notificationCount}
               </Badge>
             )}
           </div>
 
-<div className="relative">
-  <Button
-    variant="ghost"
-    size="icon"
-    className="text-white transition-all hover:bg-white/20 hover:scale-110 active:scale-95"
-    onClick={() => setShowUserMenu(!showUserMenu)}
-  >
-    <Settings className="h-5 w-5" />
-  </Button>
+          {/* MENÚ USUARIO */}
+          <div className="relative">
+            <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={() => setShowUserMenu(!showUserMenu)}>
+              <Settings className="h-5 w-5" />
+            </Button>
 
-  {showUserMenu && (
-    <div className="absolute right-0 top-12 z-50 w-48 animate-in fade-in slide-in-from-top-2 rounded-lg border border-slate-200 bg-white shadow-lg duration-200">
-      
-      {/* MI CUENTA - CON navigate EN LUGAR DE Link */}
-      <button
-        onClick={() => {
-          setShowUserMenu(false);
-          navigate("/cuenta");   // ← ESTO SÍ FUNCIONA
-        }}
-        className="flex w-full items-center gap-2 px-4 py-3 text-sm text-slate-700 transition-colors hover:bg-slate-100"
-      >
-        <User className="h-4 w-4" />
-        Mi Cuenta
-      </button>
+            {showUserMenu && (
+              <div className="absolute right-0 top-12 z-50 w-48 rounded-lg border border-slate-200 bg-white shadow-lg">
+                <button
+                  onClick={() => { setShowUserMenu(false); navigate("/cuenta"); }}
+                  className="flex w-full items-center gap-2 px-4 py-3 text-sm text-slate-700 hover:bg-slate-100"
+                >
+                  <User className="h-4 w-4" /> Mi Cuenta
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="flex w-full items-center gap-2 px-4 py-3 text-sm text-red-600 hover:bg-red-50"
+                >
+                  <LogOut className="h-4 w-4" /> Cerrar Sesión
+                </button>
+              </div>
+            )}
+          </div>
 
-      {/* CERRAR SESIÓN */}
-      <button
-        onClick={() => {
-          setShowUserMenu(false);
-          handleLogout();
-        }}
-        className="flex w-full items-center gap-2 px-4 py-3 text-sm text-red-600 transition-colors hover:bg-red-50"
-      >
-        <LogOut className="h-4 w-4" />
-        Cerrar Sesión
-      </button>
-    </div>
-  )}
-</div>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            className="gap-2 bg-white/10 text-white backdrop-blur-sm transition-all hover:bg-white/20 hover:scale-105 active:scale-95"
-            onClick={handleLogout}
-          >
-            <LogOut className="h-4 w-4" />
-            <span className="font-semibold">Salir</span>
-          </Button>
+{/* BOTÓN SALIR → VA AL INICIO (LANDING) */}
+<Button 
+  variant="ghost" 
+  size="sm" 
+  onClick={() => {
+    localStorage.clear();           // Borra todo
+    navigate("/");                  // ← VA AL INICIO (Landing)
+  }} 
+  className="gap-2 text-white hover:bg-white/20 transition-all"
+>
+  <LogOut className="h-4 w-4" />
+  <span className="hidden md:inline font-semibold">Salir</span>
+</Button>
         </div>
       </div>
     </header>
