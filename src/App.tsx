@@ -11,7 +11,6 @@ import AuditorPanel from './components/roles/AuditorPanel';
 import AdministradorPanel from './components/roles/AdministradorPanel';
 import GestorDocumentalPanel from './components/roles/GestorDocumentalPanel'; // ← AÑADIDO
 
-import { DashboardHeader } from './components/dashboard-header';
 
 const useAuth = () => {
   const token = localStorage.getItem('token');
@@ -36,7 +35,6 @@ function ProtectedDashboard() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <DashboardHeader userName={fullName} role={role} onMenuToggle={logout} />
 
       {/* MAPEO DE ROLES DEL BACKEND → TUS PANELES */}
       {role === 'solicitante' && <SolicitantePanel userName={fullName} role={role} />}

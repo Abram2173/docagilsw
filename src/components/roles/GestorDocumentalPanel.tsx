@@ -8,26 +8,34 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Upload, FileText, History, Search, Plus, CheckCircle2 } from "lucide-react";
+import { Upload, History, Search, Plus, CheckCircle2, LayoutDashboard } from "lucide-react";
+import { DashboardHeader } from "../dashboard-header";
 
 interface GestorDocumentalPanelProps {
   userName: string;
   role: string;
 }
 
-export default function GestorDocumentalPanel({ userName }: GestorDocumentalPanelProps) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+export default function GestorDocumentalPanel({ userName, role }: GestorDocumentalPanelProps) {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // ← Empieza cerrado en móvil
   const [currentSection, setCurrentSection] = useState("dashboard");
 
   const sidebarItems = [
-    { label: "Dashboard", icon: <FileText className="h-5 w-5" />, section: "dashboard" },
-    { label: "Subir Documento", icon: <Upload className="h-5 w-5" />, section: "subir" },
-    { label: "Catálogo Maestro", icon: <Search className="h-5 w-5" />, section: "catalogo" },
-    { label: "Historial", icon: <History className="h-5 w-5" />, section: "historial" },
+    { label: "Dashboard",       icon: <LayoutDashboard className="h-5 w-5" />, section: "dashboard" },
+    { label: "Subir Documento", icon: <Upload className="h-5 w-5" />,          section: "subir" },
+    { label: "Catálogo Maestro", icon: <Search className="h-5 w-5" />,       section: "catalogo" },
+    { label: "Historial",       icon: <History className="h-5 w-5" />,         section: "historial" },
   ];
 
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-gray-50 via-white to-green-50/30">
+
+      {/* HEADER CON EL BOTÓN QUE SÍ ABRE EL SIDEBAR */}
+      <DashboardHeader
+        userName={userName}
+        role={role}
+        onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)}   // ← ESTO ES LA CLAVE
+      />
 
       <div className="flex flex-1">
         <DashboardSidebar

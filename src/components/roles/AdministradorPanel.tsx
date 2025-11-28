@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Settings, FileText, Database, TrendingUp, Clock, CheckCircle2, FileText as FileTextIcon, User, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { DashboardHeader } from "../dashboard-header";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api" + "/";  // Render en prod
 
@@ -18,7 +19,7 @@ interface AdministradorPanelProps {
   role: string;
 }
 
-export default function AdministradorPanel({  }: AdministradorPanelProps) {  // ← FIX: Props con interface
+export default function AdministradorPanel({ userName, role }: AdministradorPanelProps) {  // ← FIX: Props con interface
   const [currentSection, setCurrentSection] = useState("usuarios");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [usuarios, setUsuarios] = useState<any[]>([]);
@@ -448,11 +449,11 @@ useEffect(() => {
 
 return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-slate-50 via-white to-sky-50/20">
-{  /*    <DashboardHeader 
-        userName={userName} 
-        role={role} 
-        onMenuToggle={toggleSidebar}
-      /> */ }
+<DashboardHeader 
+  userName={userName} 
+  role={role} 
+  onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)}   // ← ESTO ES LA CLAVE
+/>
       <div className="flex flex-1">
         <DashboardSidebar 
           items={sidebarItems.map(item => ({

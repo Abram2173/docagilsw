@@ -23,6 +23,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import axios from "axios";
+import { DashboardHeader } from "../dashboard-header";
 const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";  // ← FIX: Define API_BASE
 
 const sidebarItems = [
@@ -37,7 +38,7 @@ interface AuditorPanelProps {
   role: string;
 }
 
-export default function AuditorPanel({}: AuditorPanelProps) {  // ← FIX: Props con interface
+export default function AuditorPanel({userName, role}: AuditorPanelProps) {  // ← FIX: Props con interface
   const [currentSection, setCurrentSection] = useState("kpis");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [usuarios, setUsuarios] = useState([]);
@@ -121,8 +122,8 @@ const renderKPIs = () => (
         <TrendingUp className="h-4 w-4 text-[#3B82F6]" />
       </CardHeader>
       <CardContent>
-        <div className="text-3xl font-bold text-[#10B981]">{kpis.tiempo || "0 días"}</div>  // ← FIX: Usa kpis.tiempo (silencia warning)
-        <p className="text-xs text-gray-500">Usuarios: {usuarios.length || 0}</p>  // ← FIX: Usa usuarios.length
+        <div className="text-3xl font-bold text-[#10B981]">{kpis.tiempo || "0 días"}</div>  
+        <p className="text-xs text-gray-500">Usuarios: {usuarios.length || 0}</p>  
       </CardContent>
     </Card>
 
@@ -132,8 +133,8 @@ const renderKPIs = () => (
         <BarChart3 className="h-4 w-4 text-[#3B82F6]" />
       </CardHeader>
       <CardContent>
-        <div className="text-3xl font-bold text-[#10B981]">{kpis.cumplimiento || "0%"}</div>  // ← FIX: Usa kpis.cumplimiento
-        <p className="text-xs text-gray-500">Documentos: {kpis.documentos || 0}</p>  // ← FIX: Usa kpis.documentos
+        <div className="text-3xl font-bold text-[#10B981]">{kpis.cumplimiento || "0%"}</div>  
+        <p className="text-xs text-gray-500">Documentos: {kpis.documentos || 0}</p>
       </CardContent>
     </Card>
 
@@ -143,8 +144,8 @@ const renderKPIs = () => (
         <FileText className="h-4 w-4 text-[#3B82F6]" />
       </CardHeader>
       <CardContent>
-        <div className="text-3xl font-bold text-[#10B981]">{etapasFlujo.length || 0}</div>  // ← FIX: Usa etapasFlujo.length
-        <p className="text-xs text-gray-500">Reportes: {reportes.length || 0}</p>  // ← FIX: Usa reportes.length
+        <div className="text-3xl font-bold text-[#10B981]">{etapasFlujo.length || 0}</div>  
+        <p className="text-xs text-gray-500">Reportes: {reportes.length || 0}</p>  
       </CardContent>
     </Card>
 
@@ -294,7 +295,7 @@ const renderKPIs = () => (
                           <QRGenerator value={generateQRData(doc.qr || 'Sin QR', doc.tipo || '', doc.fecha || '')} size={48} />
                         </TableCell>
                       </TableRow>
-                    )) || <TableRow><TableCell colSpan={6} className="text-center text-slate-500">Sin bitácora</TableCell></TableRow>}  // ← FALLBACK
+                    )) || <TableRow><TableCell colSpan={6} className="text-center text-slate-500">Sin bitácora</TableCell></TableRow>}
                   </TableBody>
                 </Table>
               </div>
@@ -320,6 +321,11 @@ const renderKPIs = () => (
 
   return (
     <div className="flex min-h-screen flex-col">
+      <DashboardHeader 
+  userName={userName} 
+  role={role} 
+  onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)}   // ← ESTO ES LA CLAVE
+/>
       <div className="flex flex-1">
         <DashboardSidebar 
           items={sidebarItems.map((item) => ({

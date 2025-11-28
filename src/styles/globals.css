@@ -72,3 +72,21 @@ h1 {
 .feature-card {
   animation-delay: inherit;
 }
+
+/* CONTROL DEL SIDEBAR CON CLASE EN EL BODY */
+.sidebar-open .dashboard-sidebar {
+  transform: translateX(0) !important;
+}
+
+/* Ocultar por defecto en móvil */
+.dashboard-sidebar {
+  transform: translateX(-100%);
+  transition: transform 0.3s ease-in-out;
+}
+
+/* Siempre visible en escritorio */
+@media (min-width: 1024px) {
+  .dashboard-sidebar {
+    transform: translateX(0) !important;
+  }
+}

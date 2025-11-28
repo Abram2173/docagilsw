@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { CheckCircle, XCircle, MessageSquare, Loader2, Bell } from "lucide-react";
+import { DashboardHeader } from "../dashboard-header";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";  // Render en prod
 
@@ -25,7 +26,7 @@ interface AprobadorPanelProps {
   role: string;
 }
 
-  export default function AprobadorPanel({  }: AprobadorPanelProps) {  // ← FIX: Props con interface
+  export default function AprobadorPanel({  userName, role}: AprobadorPanelProps) {  // ← FIX: Props con interface
   const [currentSection, setCurrentSection] = useState<string>("pendientes");
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [comentario, setComentario] = useState<string>("");
@@ -279,8 +280,13 @@ interface AprobadorPanelProps {
 
 return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-blue-50 via-white to-blue-50/20">
-{  /*    <DashboardHeader userName={userName} role={role} onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)} />  // ← FIX: Props dinámicas
-*/}      <div className="flex flex-1">
+<DashboardHeader 
+  userName={userName} 
+  role={role} 
+  onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)}   // ← ESTO ES LA CLAVE
+/>
+
+      <div className="flex flex-1">
         <DashboardSidebar 
           items={sidebarItems.map((item) => ({
             ...item,

@@ -1,16 +1,20 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import path from 'path';  // Para resolver alias
+// vite.config.ts
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
-  base: '/docagilsw/',  // ← ¡CLAVE! Apunta al subpath de tu repo en Pages
+  
+  // BASE DINÁMICA: en local usa "/", en producción usa /docagilsw/
+  base: process.env.NODE_ENV === 'production' ? '/docagilsw/' : '/',
+  
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),  // ← Esto hace que @ funcione en runtime
+      '@': path.resolve(__dirname, './src'),
     },
   },
   build: {
-    chunkSizeWarningLimit: 1000,  // Sube a 1MB pa' silenciar
+    chunkSizeWarningLimit: 1000,
   },
-});
+})

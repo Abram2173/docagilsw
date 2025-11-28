@@ -44,10 +44,15 @@ export function DashboardHeader({ userName, role, onMenuToggle }: DashboardHeade
           </div>
         </div>
 
-        {/* BOTÓN MENÚ MÓVIL */}
-        <Button variant="ghost" size="icon" className="lg:hidden text-white hover:bg-white/20" onClick={onMenuToggle}>
-          <Menu className="h-7 w-7" />
-        </Button>
+{/* BOTÓN MENÚ - SOLO EN MÓVIL */}
+<Button
+  variant="ghost"
+  size="icon"
+  className="lg:hidden text-white hover:bg-white/20 rounded-lg"
+  onClick={onMenuToggle}
+>
+  <Menu className="h-7 w-7" />
+</Button>
 
         {/* USUARIO */}
         <div className="flex items-center gap-4">

@@ -16,6 +16,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FileText, Save, Send, Bell, CheckCircle2, Loader2 } from "lucide-react";
 import { QRGenerator } from "@/components/qr-generator";
 import { generateFolio, generateQRData } from "@/lib/folio-generator";
+import { DashboardHeader } from "../dashboard-header";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";  // Render en prod
 
@@ -30,7 +31,7 @@ interface SolicitantePanelProps {
   role: string;
 }
 
-export default function SolicitantePanel({ role }: SolicitantePanelProps) {
+export default function SolicitantePanel({ role, userName }: SolicitantePanelProps) {
   const navigate = useNavigate();  // ← AGREGADO: Para redirect
   const [currentSection, setCurrentSection] = useState("crear");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -352,6 +353,11 @@ useEffect(() => {
 
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-gray-50 via-white to-green-50/20">
+     <DashboardHeader 
+  userName={userName} 
+  role={role} 
+  onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)}   // ← ESTO ES LA CLAVE
+/>
       <div className="flex flex-1">
         <DashboardSidebar 
           items={sidebarItems.map((item) => ({
