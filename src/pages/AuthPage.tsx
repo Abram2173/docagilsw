@@ -152,17 +152,13 @@ const handleRegisterSubmit = async (e: React.FormEvent) => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-8 lg:p-16 bg-gradient-to-br from-sky-50 via-white to-emerald-50">
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-200 p-8 lg:p-12">
+<div className="w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-200 p-8 lg:p-12 relative">
         {/* Greeting */}
-          <div className="text-center mb-10 -mt-16"> {/* ← ESTE -mt-16 SUBE TODO */}            {/* Fondo negro para que el logo azul/brillante resalte */}
-          <div className="mx-auto mx-8 flex justify-center">
-            <img 
-              src={logo} 
-              alt="Dart" 
-              className="w-48 h-54 object-contain"
-            />
-          </div>
-              
+          <div className="text-center mb-10 "> {/* ← ESTE -mt-16 SUBE TODO */}            {/* Fondo negro para que el logo azul/brillante resalte */}
+<div className="w-full flex justify-center -mt-14">
+  <img src={logo} className="w-40 h-40 object-contain" />
+</div>
+      
           <h2 className="text-4xl font-bold text-slate-900 mb-2">
             {activeTab === "login" ? "¡Hola!" : "¡Crea tu Cuenta!"}
           </h2>
