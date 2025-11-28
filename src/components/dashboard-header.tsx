@@ -30,35 +30,44 @@ export function DashboardHeader({ userName, role, onMenuToggle }: DashboardHeade
         {/* LOGO DART OFICIAL */}
         <div className="flex items-center gap-3 group">
           <div className="relative">
-            <Lightbulb className="w-10 h-10 md:w-12 md:h-12 text-[#0EA5E9] fill-[#0EA5E9] animate-pulse-slow" />
+            <Lightbulb className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-[#0EA5E9] fill-[#0EA5E9] animate-pulse-slow" />
             <Sparkles className="w-5 h-5 text-[#10B981] absolute -top-1 -right-1 animate-bounce-slow" />
           </div>
 
           <div className="flex items-baseline">
-            <span className="text-4xl md:text-5xl font-bold text-[#000000]" style={{ fontFamily: "'Libre Baskerville', serif" }}>
+            <span className="text-4xl sm:text-3xl md:text-5xl font-bold text-[#000000]" style={{ fontFamily: "'Libre Baskerville', serif" }}>
               D
             </span>
-            <span className="text-3xl md:text-4xl font-black text-[#000000] tracking-wider" style={{ fontFamily: "'Norwester', sans-serif", letterSpacing: "0.12em" }}>
+            <span className="text-2xl sm:text-3xl md:text-3xl font-black text-[#000000] tracking-wider" style={{ fontFamily: "'Norwester', sans-serif", letterSpacing: "0.12em" }}>
               ART
             </span>
           </div>
         </div>
 
-{/* BOTÓN MENÚ - SOLO EN MÓVIL */}
-<Button
-  variant="ghost"
-  size="icon"
-  className="lg:hidden text-white hover:bg-white/20 rounded-lg"
-  onClick={onMenuToggle}
->
-  <Menu className="h-7 w-7" />
-</Button>
+          {/* BOTÓN MENÚ - SOLO EN MÓVIL */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="lg:hidden text-white hover:bg-white/20 rounded-lg"
+            onClick={onMenuToggle}
+          >
+            <Menu className="h-7 w-7" />
+          </Button>
 
-        {/* USUARIO */}
-        <div className="flex items-center gap-4">
-          <div className="text-right">
-            <p className="text-lg font-semibold text-white">Hola, {userName || 'Usuario'}</p>
-            <Badge variant="secondary" className="bg-white/20 text-white backdrop-blur-sm">{role}</Badge>
+                  {/* USUARIO */}
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+          <p className="hidden sm:block text-lg font-semibold text-white">
+            Hola, {userName || 'Usuario'}
+          </p>
+
+          <Badge 
+            variant="secondary" 
+            className="hidden sm:inline bg-white/20 text-white backdrop-blur-sm"
+          >
+            {role}
+          </Badge>
+
           </div>
           <div className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center">
             <User className="h-6 w-6 text-white" />
