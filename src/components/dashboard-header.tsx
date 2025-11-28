@@ -27,6 +27,16 @@ export function DashboardHeader({ userName, role, onMenuToggle }: DashboardHeade
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjA1IiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-30" />
 
       <div className="relative flex items-center justify-between">
+                  {/* BOTÓN MENÚ - SOLO EN MÓVIL */}
+<Button
+  variant="ghost"
+  size="icon"
+  className="lg:hidden text-black hover:bg-black/10 rounded-lg"
+  onClick={onMenuToggle}
+>
+  <Menu className="h-14 w-14" />
+</Button>
+
         {/* LOGO DART OFICIAL */}
         <div className="flex items-center gap-3 group">
           <div className="relative">
@@ -44,15 +54,7 @@ export function DashboardHeader({ userName, role, onMenuToggle }: DashboardHeade
           </div>
         </div>
 
-          {/* BOTÓN MENÚ - SOLO EN MÓVIL */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="lg:hidden text-white hover:bg-white/20 rounded-lg"
-            onClick={onMenuToggle}
-          >
-            <Menu className="h-7 w-7" />
-          </Button>
+
 
                   {/* USUARIO */}
                   <div className="flex items-center gap-4">
