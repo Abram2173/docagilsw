@@ -72,7 +72,10 @@ export default function SelectRole() {
     <Card
       key={r.role}
       className={`shadow-2xl hover:shadow-3xl transition-all duration-300 cursor-pointer transform hover:scale-105 border-0 bg-gradient-to-br ${r.color} text-white h-full`}
-      onClick={() => handleSelectRole(r.role)}
+      onClick={() => {
+  localStorage.setItem("selected_role", r.role)
+  navigate("/auth")  // ← SOLO AL LOGIN, NADA DE REGISTER
+}}
     >
       <CardContent className="p-6 md:p-8 text-center flex flex-col items-center justify-center h-full">
         <div className="mb-4">{r.icon}</div>

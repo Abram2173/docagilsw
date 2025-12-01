@@ -7,12 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CheckCircle2, Clock } from "lucide-react";
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://backencdart.onrender.com/api";
 
 export default function AuthPage() {
   const [searchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState<"login" | "register">(
+  const [activeTab] = useState<"login" | "register">(
     (searchParams.get("tab") as "login" | "register") || "login"
   );
   const navigate = useNavigate();
@@ -37,6 +38,9 @@ export default function AuthPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [acceptTerms, setAcceptTerms] = useState(false);
+  const [showPendingModal, setShowPendingModal] = useState(false);
+
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   // Validación de correo institucional
   const validateEmail = (email: string) => {
@@ -68,6 +72,7 @@ export default function AuthPage() {
   // === REGISTER SUBMIT ===
 const handleRegisterSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
+  
   if (password !== confirmPassword) {
     setPasswordError("Las contraseñas no coinciden");
     return;
@@ -80,45 +85,44 @@ const handleRegisterSubmit = async (e: React.FormEvent) => {
   setIsSubmitting(true);
   setErrorMsg("");
 
-  // GENERAMOS UN USERNAME ÚNICO A PARTIR DEL EMAIL
   const generatedUsername = registerEmail.split("@")[0].toLowerCase();
 
   const payload = {
-    username: generatedUsername,           // OBLIGATORIO y único
+    username: generatedUsername,
     full_name: fullName,
     email: registerEmail,
     phone: phone || "",
     department: department || "",
-    role: role,                            // solicitante, aprobador, auditor, gestor
+    role: role,
     password: password,
-    confirm_password: confirmPassword,     // Tu serializer lo necesita
+    confirm_password: confirmPassword,
   };
-
-  console.log("Enviando registro:", payload); // Para que veas en consola
 
   try {
     await axios.post(`${API_BASE}/auth/register/`, payload);
-    alert("¡Solicitud enviada con éxito! El administrador te aprobará pronto.");
-    setActiveTab("login");
-    // Reset form
-    setCurrentStep(1);
-    setFullName(""); 
-    setRegisterEmail(""); 
-    setPhone(""); 
-    setDepartment(""); 
+    
+    // ← MUESTRA EL MODAL BONITO
+    setShowSuccessModal(true);
+
+    // Limpia el formulario
+    setFullName("");
+    setRegisterEmail("");
+    setPhone("");
+    setDepartment("");
     setRole("");
-    setPassword(""); 
-    setConfirmPassword(""); 
+    setPassword("");
+    setConfirmPassword("");
     setAcceptTerms(false);
+    setCurrentStep(1);
+
   } catch (error: any) {
     console.error("Error del backend:", error.response?.data);
     const err = error.response?.data;
     let msg = "";
     if (err?.email) msg = err.email[0];
-    else if (err?.username) msg = "Nombre de usuario ya existe";
+    else if (err?.username) msg = "Este correo ya está registrado";
     else if (err?.non_field_errors) msg = err.non_field_errors[0];
-    else msg = "Error en el registro. Intenta con otro correo.";
-    
+    else msg = "Error al enviar la solicitud";
     setErrorMsg(msg);
   } finally {
     setIsSubmitting(false);
@@ -126,29 +130,40 @@ const handleRegisterSubmit = async (e: React.FormEvent) => {
 };
 
   // === LOGIN SUBMIT (SIMPLE Y LIMPIO) ===
-  const handleLoginSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setErrorMsg("");
+const handleLoginSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setIsSubmitting(true);
+  setErrorMsg("");
 
-    try {
-      const response = await axios.post(`${API_BASE}/auth/login/`, {
-        username: loginUsername,
-        password: loginPassword,
-      });
+  try {
+    const response = await axios.post(`${API_BASE}/auth/login/`, {
+      username: loginUsername,
+      password: loginPassword,
+    });
 
-      const { token, role, full_name } = response.data;
-      localStorage.setItem("token", token);
-      localStorage.setItem("role", role);
-      localStorage.setItem("full_name", full_name || loginUsername);
+    const { token, role, full_name } = response.data;
+    localStorage.setItem("token", token);
+    localStorage.setItem("role", role);
+    localStorage.setItem("full_name", full_name || loginUsername);
 
-      navigate("/dashboard");
-    } catch (error: any) {
-      setErrorMsg(error.response?.data?.non_field_errors?.[0] || "Usuario o contraseña incorrectos");
-    } finally {
-      setIsSubmitting(false);
+    navigate("/dashboard");
+  } catch (error: any) {
+    console.error("Error login:", error.response);
+
+    // ← SI NO ESTÁ APROBADO → ABRE EL MODAL
+    if (error.response?.status === 403 || 
+        error.response?.data?.detail?.includes("aprob") ||
+        error.response?.data?.non_field_errors?.[0]?.includes("aprob")) {
+      setShowPendingModal(true);
+    } 
+    // ← SI ES CONTRASEÑA MAL → MENSAJE NORMAL
+    else {
+      setErrorMsg("Usuario o contraseña incorrectos");
     }
-  };
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   return (
     <div className="min-h-screen flex items-center justify-center p-8 lg:p-16 bg-gradient-to-br from-sky-50 via-white to-emerald-50">
@@ -170,7 +185,7 @@ const handleRegisterSubmit = async (e: React.FormEvent) => {
           </p>
         </div>
 
-        {/* Tabs */}
+        {/* Tabs
         <div className="flex gap-4 mb-8">
           <Button
             variant={activeTab === "login" ? "default" : "outline"}
@@ -186,7 +201,7 @@ const handleRegisterSubmit = async (e: React.FormEvent) => {
           >
             Crear Cuenta
           </Button>
-        </div>
+        </div> */}
 
         {/* LOGIN LIMPIO */}
         {activeTab === "login" && (
@@ -227,6 +242,64 @@ const handleRegisterSubmit = async (e: React.FormEvent) => {
               </a>
             </div>
           </form>
+        )}
+        {/* MODAL DE ÉXITO - BONITO Y PROFESIONAL */}
+        {showSuccessModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+            <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-10 text-center">
+              <div className="mx-auto mb-6 w-24 h-24 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center shadow-xl">
+                <CheckCircle2 className="w-14 h-14 text-white" />
+              </div>
+              
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                ¡Solicitud Enviada!
+              </h2>
+              
+              <p className="text-lg text-gray-700 mb-8">
+                Tu cuenta está pendiente de aprobación por el administrador.<br />
+                Te notificaremos cuando esté lista.
+              </p>
+
+              <Button
+                size="lg"
+                className="bg-gradient-to-r from-sky-600 to-emerald-600 hover:from-sky-700 hover:to-emerald-700 text-white text-xl px-12 py-7 rounded-2xl"
+                onClick={() => {
+                  setShowSuccessModal(false);
+                  navigate("/select-role");  // ← LO MANDA A SELECTROLE
+                }}
+              >
+                Volver al inicio
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL - CUENTA PENDIENTE DE APROBACIÓN */}
+        {showPendingModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+            <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-10 text-center">
+              <div className="mx-auto mb-6 w-24 h-24 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center shadow-xl">
+                <Clock className="w-14 h-14 text-white" />
+              </div>
+
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                Cuenta Pendiente
+              </h2>
+
+              <p className="text-lg text-gray-700 mb-8 leading-relaxed">
+                Tu solicitud de acceso está siendo revisada por el administrador.<br />
+                Te notificaremos cuando tu cuenta sea aprobada.
+              </p>
+
+              <Button
+                size="lg"
+                className="bg-gradient-to-r from-sky-600 to-emerald-600 hover:from-sky-700 hover:to-emerald-700 text-white text-xl px-12 py-7 rounded-2xl"
+                onClick={() => setShowPendingModal(false)}
+              >
+                Entendido
+              </Button>
+            </div>
+          </div>
         )}
 
         {/* REGISTER (mantiene tu flujo de 2 pasos) */}
@@ -296,5 +369,6 @@ const handleRegisterSubmit = async (e: React.FormEvent) => {
         )}
       </div>
     </div>
+    
   );
 }

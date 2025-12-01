@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react"
 import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { CheckCircle, FileCheck, GitBranch, Shield, Sparkles, Lightbulb } from "lucide-react"
+import { CheckCircle, FileCheck, GitBranch, Shield, Lightbulb, CircleCheck } from "lucide-react"
 export default function Landing() {
   const cardsRef = useRef<HTMLDivElement>(null)
   const heroRef = useRef<HTMLDivElement>(null)
@@ -36,13 +36,13 @@ export default function Landing() {
         {/* Logo + Título */}
         <div className="flex justify-center mb-12">
           <div className="flex items-center gap-4 group">
-            <div className="relative">
-              <Lightbulb className="w-16 h-16 md:w-20 md:h-20 text-[#0EA5E9] fill-[#0EA5E9] animate-pulse-slow" />
-              <Sparkles className="w-8 h-8 text-[#10B981] absolute -top-2 -right-2 animate-bounce-slow" />
-            </div>
             <h1 className="text-6xl md:text-8xl font-bold bg-gradient-to-r from-[#0EA5E9] to-[#10B981] bg-clip-text text-transparent">
               Dart
             </h1>
+            <div className="relative">
+              <Lightbulb className="w-16 h-16 md:w-20 md:h-20 text-[#0EA5E9] fill-[#0EA5E9] animate-pulse-slow" />
+              <CircleCheck className="w-8 h-8 text-[#10B981] absolute -top-2 -right-2 " />
+            </div>
           </div>
         </div>
 

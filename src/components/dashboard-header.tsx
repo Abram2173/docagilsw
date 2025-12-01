@@ -52,7 +52,7 @@ export function DashboardHeader({ userName, role, onMenuToggle }: DashboardHeade
 
             <div className="relative">
             <Lightbulb className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-[#ffffff] fill-[#0EA5E9] animate-pulse-slow" />
-            <CircleCheck className="w-5 h-5 text-[#ffffff] absolute -top-1 -right-1 animate-bounce-slow" />
+            <CircleCheck className="w-5 h-5 text-[#ffffff] absolute -top-1 -right-1" />
             
           </div>
         </div>
