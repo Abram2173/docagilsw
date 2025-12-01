@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Bell, LogOut, User, Settings, Menu, Lightbulb, Sparkles } from "lucide-react";
+import { Bell, LogOut, User, Settings, Menu, Lightbulb, CircleCheck } from "lucide-react";
 
 interface DashboardHeaderProps {
   userName: string;
@@ -39,10 +39,7 @@ export function DashboardHeader({ userName, role, onMenuToggle }: DashboardHeade
 
         {/* LOGO DART OFICIAL */}
         <div className="flex items-center gap-3 group">
-          <div className="relative">
-            <Lightbulb className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-[#0EA5E9] fill-[#0EA5E9] animate-pulse-slow" />
-            <Sparkles className="w-5 h-5 text-[#10B981] absolute -top-1 -right-1 animate-bounce-slow" />
-          </div>
+
 
           <div className="flex items-baseline">
             <span className="text-4xl sm:text-3xl md:text-5xl font-bold text-[#000000]" style={{ fontFamily: "'Libre Baskerville', serif" }}>
@@ -51,6 +48,12 @@ export function DashboardHeader({ userName, role, onMenuToggle }: DashboardHeade
             <span className="text-2xl sm:text-3xl md:text-3xl font-black text-[#000000] tracking-wider" style={{ fontFamily: "'Norwester', sans-serif", letterSpacing: "0.12em" }}>
               ART
             </span>
+          </div>
+
+            <div className="relative">
+            <Lightbulb className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-[#ffffff] fill-[#0EA5E9] animate-pulse-slow" />
+            <CircleCheck className="w-5 h-5 text-[#ffffff] absolute -top-1 -right-1 animate-bounce-slow" />
+            
           </div>
         </div>
 

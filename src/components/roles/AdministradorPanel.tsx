@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Settings, FileText, Database, TrendingUp, Clock, CheckCircle2, FileText as FileTextIcon, User, Loader2 } from "lucide-react";
+import { Settings, FileText, Database, Clock, CheckCircle2, FileText as FileTextIcon, User, Loader2, TrendingUp, X, Users, } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DashboardHeader } from "../dashboard-header";
 // ← AQUÍ AGREGAS ESTO
@@ -21,7 +21,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from "recharts";
 
@@ -44,6 +43,7 @@ export default function AdministradorPanel({ userName, role }: AdministradorPane
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [documentos, setDocumentos] = useState<any[]>([]);
+  const [showKPIModal, setShowKPIModal] = useState(false);
 
   const token = localStorage.getItem("token");
 
@@ -257,153 +257,176 @@ const handleSectionChange = (label: string) => {
     </Card>
   );
 
+  // ← PON ESTO DESPUÉS DE TUS useState (fuera de cualquier función)
+const usuariosPorRol = usuarios.reduce((acc: any[], user: any) => {
+  const rolName = 
+    user.role === "gestor" ? "Gestor Documental" :
+    user.role === "aprobador" ? "Revisor" :
+    user.role === "auditor" ? "Auditor" :
+    "Usuario Final";
+
+  const existing = acc.find((item: any) => item.rol === rolName);
+  if (existing) existing.cantidad += 1;
+  else acc.push({ rol: rolName, cantidad: 1, color: 
+    user.role === "gestor" ? "#10B981" :
+    user.role === "aprobador" ? "#0EA5E9" :
+    user.role === "auditor" ? "#8B5CF6" : "#64748B"
+  });
+  return acc;
+}, []);
+
+const estadoDocs = [
+  { name: "Aprobados", value: documentos.filter(d => d.etapa?.toLowerCase().includes("aprobad")).length || 0, color: "#10B981" },
+  { name: "En Revisión", value: documentos.filter(d => d.etapa?.toLowerCase().includes("cambio")).length || 0, color: "#0EA5E9" },
+  { name: "Pendientes", value: documentos.filter(d => d.etapa?.toLowerCase().includes("permiso")).length || 0, color: "#F59E0B" },
+  { name: "Por Vencer", value: 0, color: "#EF4444" },
+];
+
+
 const renderKPIs = () => {
-  // 1. USUARIOS POR ROL — 100% REAL
+  // ← NÚMEROS REALES DE USUARIOS
+  const totalUsuarios = usuarios.length;
+  const aprobados = usuarios.filter(u => u.is_approved === true).length;
+  const pendientes = totalUsuarios - aprobados;
+
+  // ← NÚMEROS REALES DE DOCUMENTOS (lo que tienes en la captura)
+  const documentosAprobados = documentos.filter(d => d.etapa?.toLowerCase().includes("aprobad")).length;
+  const documentosEnRevision = documentos.filter(d => d.etapa?.toLowerCase().includes("cambio")).length;
+  const documentosPendientes = documentos.filter(d => d.etapa?.toLowerCase().includes("permiso")).length;
+
+  // ← GRÁFICA DE BARRAS - DOCUMENTOS POR ESTADO (REAL)
+  const estadoDocs = [
+    { name: "Aprobados", value: documentosAprobados, color: "#10B981" },
+    { name: "En Revisión", value: documentosEnRevision, color: "#0EA5E9" },
+    { name: "Pendientes", value: documentosPendientes, color: "#F59E0B" },
+    { name: "Por Vencer", value: 0, color: "#EF4444" },
+  ];
+
+  // ← GRÁFICA DE PASTEL - USUARIOS POR ROL (REAL)
   const usuariosPorRol = usuarios.reduce((acc: any[], user: any) => {
-    const rolName =
+    const rolName = 
       user.role === "gestor" ? "Gestor Documental" :
       user.role === "aprobador" ? "Revisor" :
       user.role === "auditor" ? "Auditor" :
       "Usuario Final";
 
     const existing = acc.find((item: any) => item.rol === rolName);
-    if (existing) {
-      existing.cantidad += 1;
-    } else {
-      acc.push({
-        rol: rolName,
-        cantidad: 1,
-        color:
-          user.role === "gestor" ? "#10B981" :
-          user.role === "aprobador" ? "#0EA5E9" :
-          user.role === "auditor" ? "#8B5CF6" : "#64748B"
-      });
-    }
+    if (existing) existing.cantidad += 1;
+    else acc.push({ rol: rolName, cantidad: 1, color: 
+      user.role === "gestor" ? "#10B981" :
+      user.role === "aprobador" ? "#0EA5E9" :
+      user.role === "auditor" ? "#8B5CF6" : "#64748B"
+    });
     return acc;
   }, []);
-const estadoDocs = [
-    { 
-      name: "Aprobados", 
-      value: documentos.filter(d => 
-        d.etapa?.toLowerCase().includes("aprobad") || 
-        d.status?.toLowerCase().includes("aprobad")
-      ).length, 
-      color: "#10B981" 
-    },
-    { 
-      name: "En Revisión", 
-      value: documentos.filter(d => 
-        d.etapa?.toLowerCase().includes("cambio") ||
-        d.status?.toLowerCase().includes("revis")
-      ).length, 
-      color: "#0EA5E9" 
-    },
-    { 
-      name: "Pendientes", 
-      value: documentos.filter(d => 
-        d.etapa?.toLowerCase().includes("permiso")
-      ).length, 
-      color: "#F59E0B" 
-    },
-    { name: "Por Vencer", value: 0, color: "#EF4444" },
-  ];
 
   return (
     <div className="space-y-12">
       <h2 className="text-4xl font-bold text-center text-gray-900 mb-12">
-        KPIs Globales del Sistema (Datos en tiempo real)
+        KPIs Globales del Sistema
       </h2>
 
-{/* TARJETAS REALES - CORREGIDAS */}
-<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-  <Card className="shadow-2xl bg-gradient-to-br from-sky-500 to-sky-600 text-white">
-    <CardContent className="p-8 text-center">
-      <User className="w-16 h-16 mx-auto mb-4 opacity-90" />
-      <p className="text-5xl font-black">{usuarios.length}</p>
-      <p className="text-xl mt-2">Usuarios Registrados</p>
+{/* 4 TARJETAS KPIs - VERSIÓN COMPACTA Y BRUTAL */}
+<div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+  {/* USUARIOS REGISTRADOS */}
+  <Card className="shadow-xl bg-gradient-to-br from-sky-500 to-sky-600 text-white hover:shadow-2xl transition-all duration-300">
+    <CardContent className="p-5 md:p-6 text-center">
+      <User className="w-10 h-10 md:w-12 md:h-12 mx-auto mb-2 opacity-90" />
+      <p className="text-3xl md:text-4xl font-black">{totalUsuarios}</p>
+      <p className="text-sm md:text-base mt-1 opacity-90">Usuarios Registrados</p>
     </CardContent>
   </Card>
 
-{/* APROBADOS - LOS QUE TÚ APRUEBAS EN EL ADMIN */}
-<Card className="shadow-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
-  <CardContent className="p-8 text-center">
-    <CheckCircle2 className="w-16 h-16 mx-auto mb-4 opacity-90" />
-    <p className="text-5xl font-black">
-      {usuarios.filter(u => u.is_approved === true).length}
-    </p>
-    <p className="text-xl mt-2">Aprobados</p>
-  </CardContent>
-</Card>
+  {/* APROBADOS */}
+  <Card className="shadow-xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white hover:shadow-2xl transition-all duration-300">
+    <CardContent className="p-5 md:p-6 text-center">
+      <CheckCircle2 className="w-10 h-10 md:w-12 md:h-12 mx-auto mb-2 opacity-90" />
+      <p className="text-3xl md:text-4xl font-black">{aprobados}</p>
+      <p className="text-sm md:text-base mt-1 opacity-90">Aprobados</p>
+    </CardContent>
+  </Card>
 
-{/* PENDIENTES - LOS QUE NO ESTÁN APROBADOS */}
-<Card className="shadow-2xl bg-gradient-to-br from-amber-500 to-amber-600 text-white">
-  <CardContent className="p-8 text-center">
-    <Clock className="w-16 h-16 mx-auto mb-4 opacity-90" />
-    <p className="text-5xl font-black">
-      {usuarios.filter(u => u.is_approved !== true).length}
-    </p>
-    <p className="text-xl mt-2">Pendientes</p>
-  </CardContent>
-</Card>
+  {/* PENDIENTES */}
+  <Card className="shadow-xl bg-gradient-to-br from-amber-500 to-amber-600 text-white hover:shadow-2xl transition-all duration-300">
+    <CardContent className="p-5 md:p-6 text-center">
+      <Clock className="w-10 h-10 md:w-12 md:h-12 mx-auto mb-2 opacity-90" />
+      <p className="text-3xl md:text-4xl font-black">{pendientes}</p>
+      <p className="text-sm md:text-base mt-1 opacity-90">Pendientes</p>
+    </CardContent>
+  </Card>
 
-  <Card className="shadow-2xl bg-gradient-to-br from-purple-500 to-purple-600 text-white">
-    <CardContent className="p-8 text-center">
-      <TrendingUp className="w-16 h-16 mx-auto mb-4 opacity-90" />
-      <p className="text-5xl font-black">100%</p>
-      <p className="text-xl mt-2">Sistema Activo</p>
+  {/* DOCUMENTOS TOTALES */}
+  <Card className="shadow-xl bg-gradient-to-br from-purple-500 to-purple-600 text-white hover:shadow-2xl transition-all duration-300">
+    <CardContent className="p-5 md:p-6 text-center">
+      <FileText className="w-10 h-10 md:w-12 md:h-12 mx-auto mb-2 opacity-90" />
+      <p className="text-3xl md:text-4xl font-black">{documentos.length}</p>
+      <p className="text-sm md:text-base mt-1 opacity-90">Documentos</p>
     </CardContent>
   </Card>
 </div>
-      {/* GRÁFICA 1: USUARIOS POR ROL (REAL) */}
-      {usuariosPorRol.length > 0 ? (
-        <Card className="shadow-2xl">
-          <CardHeader>
-            <CardTitle className="text-2xl">Usuarios por Rol</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={400}>
-              <PieChart>
-                <Pie data={usuariosPorRol} dataKey="cantidad" nameKey="rol" cx="50%" cy="50%" outerRadius={130}>
-                  {usuariosPorRol.map((entry, i) => (
-                    <Cell key={i} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value: number) => `${value} usuarios`} />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card className="text-center py-12">
-          <p className="text-gray-500">Aún no hay usuarios registrados</p>
-        </Card>
-      )}
 
-      {/* GRÁFICA 2: ESTADO DE DOCUMENTOS (REAL) */}
-<Card className="shadow-2xl">
-      <CardHeader>
-        <CardTitle className="text-2xl">Estado Actual de Documentos</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {documentos.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">
-            <p>Aún no hay documentos registrados</p>
-          </div>
-        ) : (
-          <ResponsiveContainer width="100%" height={350}>
-            <BarChart data={estadoDocs}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="value" fill="#0EA5E9" radius={[12, 12, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        )}
-      </CardContent>
-    </Card>
-    </div>
+ {/* GRÁFICAS - SOLO EN ESCRITORIO (lg y más grande) */}
+<div className="hidden lg:grid grid-cols-1 lg:grid-cols-2 gap-8 mt-12">
+  {/* GRÁFICA 1: USUARIOS POR ROL */}
+  <Card className="shadow-2xl">
+    <CardHeader>
+      <CardTitle className="text-2xl flex items-center gap-3">
+        <Users className="w-8 h-8 text-[#0EA5E9]" />
+        Usuarios por Rol
+      </CardTitle>
+    </CardHeader>
+    <CardContent>
+      <ResponsiveContainer width="100%" height={400}>
+        <PieChart>
+          <Pie
+            data={usuariosPorRol}
+            dataKey="cantidad"
+            nameKey="rol"
+            cx="50%"
+            cy="50%"
+            innerRadius={80}
+            outerRadius={140}
+            paddingAngle={5}
+            label={(entry: any) => `${entry.rol}: ${entry.cantidad}`}
+          >
+            {usuariosPorRol.map((entry, i) => (
+              <Cell key={i} fill={entry.color} />
+            ))}
+          </Pie>
+          <Tooltip formatter={(value: number) => `${value} usuarios`} />
+        </PieChart>
+      </ResponsiveContainer>
+    </CardContent>
+  </Card>
+
+  {/* GRÁFICA 2: ESTADO DE DOCUMENTOS */}
+  <Card className="shadow-2xl">
+    <CardHeader>
+      <CardTitle className="text-2xl">Estado Actual de Documentos</CardTitle>
+    </CardHeader>
+    <CardContent>
+      <ResponsiveContainer width="100%" height={400}>
+        <BarChart data={estadoDocs}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="name" />
+          <YAxis />
+          <Tooltip />
+          <Bar dataKey="value" fill="#0EA5E9" radius={[12, 12, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
+    </CardContent>
+  </Card>
+</div>
+
+{/* MENSAJE EN MÓVIL Y TABLET */}
+<div className="lg:hidden text-center py-12">
+  <div className="bg-gradient-to-br from-sky-50 to-emerald-50 rounded-3xl p-8 shadow-lg">
+    <TrendingUp className="w-16 h-16 mx-auto mb-4 text-[#0EA5E9]" />
+    <h3 className="text-2xl font-bold text-gray-900 mb-2">Gráficas disponibles en escritorio</h3>
+    <p className="text-gray-600">Usa una pantalla más grande para ver los KPIs detallados</p>
+  </div>
+</div>
+  </div>
   );
 };
 
@@ -569,7 +592,92 @@ return (
           </div>
         </main>
       </div>
-      <DashboardFooter />
+{/* BOTÓN FLOTANTE - SOLO EN LA SECCIÓN "KPIs Globales" */}
+{currentSection === "kpis" && (
+  <div className="fixed bottom-8 right-6 z-50 lg:hidden">
+    <Button
+      size="icon"
+      className="rounded-full shadow-2xl bg-gradient-to-br from-sky-600 to-emerald-600 hover:from-sky-700 hover:to-emerald-700 w-16 h-16 flex items-center justify-center"
+      onClick={() => setShowKPIModal(true)}
+    >
+      <TrendingUp className="w-8 h-8 text-white" />
+    </Button>
+  </div>
+)}
+
+   {/* MODAL DE KPIs - PERFECTO EN MÓVIL */}
+{showKPIModal && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-y-auto">
+      {/* CABECERA */}
+      <div className="sticky top-0 bg-white border-b border-gray-200 p-6 flex justify-between items-center">
+        <h2 className="text-2xl md:text-3xl font-bold text-gray-900">KPIs Globales</h2>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setShowKPIModal(false)}
+          className="text-gray-600 hover:bg-gray-100 rounded-full"
+        >
+          <X className="w-8 h-8" />
+        </Button>
+      </div>
+
+      {/* CONTENIDO RESPONSIVE */}
+      <div className="p-6 md:p-8 space-y-10">
+        {/* GRÁFICA DE PASTEL */}
+        <Card className="shadow-xl">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl md:text-2xl flex items-center gap-3">
+              <Users className="w-7 h-7 text-[#0EA5E9]" />
+              Usuarios por Rol
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={320}>
+              <PieChart>
+                <Pie
+                  data={usuariosPorRol}
+                  dataKey="cantidad"
+                  nameKey="rol"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={110}
+                  paddingAngle={5}
+                  label={(entry: any) => `${entry.rol}: ${entry.cantidad}`}
+                >
+                  {usuariosPorRol.map((entry, i) => (
+                    <Cell key={i} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value: number) => `${value} usuarios`} />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* GRÁFICA DE BARRAS */}
+        <Card className="shadow-xl">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl md:text-2xl">Estado Actual de Documentos</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={320}>
+              <BarChart data={estadoDocs}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" angle={-15} textAnchor="end" height={60} />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="value" fill="#0EA5E9" radius={[12, 12, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
     </div>
+  </div>
+)}
+      <DashboardFooter />
+    </div>  
   );
 }
