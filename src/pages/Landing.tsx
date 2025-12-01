@@ -85,7 +85,7 @@ export default function Landing() {
             </Link>
             <Link to="/auth?tab=register">
               <Button size="lg" variant="outline" className="bg-white text-[#10B981] border-[#10B981] hover:bg-[#10B981] hover:text-white text-xl px-12 py-7 rounded-xl shadow-xl hover:shadow-2xl hover:scale-105 transition-all">
-                Solicitar Demo
+                Solicitar Registro
               </Button>
             </Link>
           </div>
