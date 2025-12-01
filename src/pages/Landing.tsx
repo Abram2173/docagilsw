@@ -77,18 +77,25 @@ export default function Landing() {
           </div>
 
           {/* Botones */}
-          <div className="flex flex-col sm:flex-row gap-6 justify-center">
-            <Link to="/auth?tab=login">
-              <Button size="lg" className="bg-[#0EA5E9] hover:bg-[#0EA5E9]/90 text-white text-xl px-12 py-7 rounded-xl shadow-xl hover:shadow-2xl hover:scale-105 transition-all">
-                Iniciar Sesión
-              </Button>
-            </Link>
-            <Link to="/auth?tab=register">
-              <Button size="lg" variant="outline" className="bg-white text-[#10B981] border-[#10B981] hover:bg-[#10B981] hover:text-white text-xl px-12 py-7 rounded-xl shadow-xl hover:shadow-2xl hover:scale-105 transition-all">
-                Solicitar Registro
-              </Button>
-            </Link>
-          </div>
+<div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+    {/* INICIAR SESIÓN */}
+<Link to="/select-role">
+    <Button size="lg" className="bg-gradient-to-r from-[#0EA5E9] to-[#10B981] text-white text-2xl px-16 py-10 rounded-3xl shadow-2xl hover:shadow-3xl hover:scale-105 transition-all">
+      Iniciar Sesión
+    </Button>
+  </Link>
+
+    {/* REGISTRARSE (opcional) */}
+    <Link to="/auth?tab=register">
+      <Button 
+        size="lg" 
+        variant="outline"
+        className="border-2 border-[#0EA5E9] text-[#0EA5E9] hover:bg-[#0EA5E9] hover:text-white text-xl px-12 py-8 rounded-2xl shadow-2xl hover:shadow-3xl hover:scale-105 transition-all duration-300 font-bold"
+      >
+        Solicitar Acceso
+      </Button>
+    </Link>
+  </div>
         </div>
 
         {/* Features */}
