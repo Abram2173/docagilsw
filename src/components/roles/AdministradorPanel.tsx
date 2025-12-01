@@ -10,6 +10,21 @@ import { Badge } from "@/components/ui/badge";
 import { Settings, FileText, Database, TrendingUp, Clock, CheckCircle2, FileText as FileTextIcon, User, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DashboardHeader } from "../dashboard-header";
+// ← AQUÍ AGREGAS ESTO
+import {
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
+
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api" + "/";  // Render en prod
 
@@ -24,10 +39,11 @@ export default function AdministradorPanel({ userName, role }: AdministradorPane
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [usuarios, setUsuarios] = useState<any[]>([]);
   const [etapasFlujo, setEtapasFlujo] = useState<any[]>([]);
-  const [reportes, setReportes] = useState<any[]>([]);
-  const [kpis, setKpis] = useState({ usuarios: 0, documentos: 0, tiempo: "0 días", cumplimiento: "0%" });
+  const [reportes] = useState<any[]>([]);
+  // const [, setKpis] = useState({ usuarios: 0, documentos: 0, tiempo: "0 días", cumplimiento: "0%" });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [documentos, setDocumentos] = useState<any[]>([]);
 
   const token = localStorage.getItem("token");
 
@@ -44,16 +60,16 @@ useEffect(() => {
     setLoading(true);
     setError(null);
     try {
-      const [usuariosRes, flujosRes, reportesRes, kpisRes] = await Promise.all([
+      const [usuariosRes, flujosRes,] = await Promise.all([
         axios.get(`${API_BASE}/admin/usuarios/`, { headers }),  // ← AGREGADO: { headers } en cada call
         axios.get(`${API_BASE}/documents/flows/`, { headers }),
         axios.get(`${API_BASE}/admin/reportes/`, { headers }),
         axios.get(`${API_BASE}/admin/kpis/`, { headers }),
       ]);
       setUsuarios(usuariosRes.data);
-      setEtapasFlujo(flujosRes.data);
-      setReportes(reportesRes.data);
-      setKpis(kpisRes.data);
+setEtapasFlujo(flujosRes.data);  // ← CAMBIA A:
+setDocumentos(flujosRes.data);   // ← ASÍ LO USAMOS EN LAS GRÁFICAS
+      // setKpis(kpisRes.data);
     } catch (error: any) {
       setError(error.response?.data?.non_field_errors?.[0] || "Error al cargar datos");
     } finally {
@@ -63,17 +79,15 @@ useEffect(() => {
   fetchData();
 }, [token]);
 
-  const sectionMap: Record<string, string> = {
-    "Usuarios": "usuarios",
-    "Flujos": "flujos",
-    "KPIs Globales": "kpis",
-    "Reportes": "reportes",
-    "Mantenimiento": "mantenimiento",
-  };
-
-  const handleSectionChange = (label: string) => {
-    const section = sectionMap[label] || "usuarios";
-    setCurrentSection(section);
+const handleSectionChange = (label: string) => {
+    const map: Record<string, string> = {
+      Usuarios: "usuarios",
+      "Flujos": "flujos",
+      "KPIs Globales": "kpis",
+      Reportes: "reportes",
+      Mantenimiento: "mantenimiento",
+    };
+    setCurrentSection(map[label] || "usuarios");
   };
 
   const handleApproveUser = async (userId: number) => {
@@ -243,72 +257,155 @@ useEffect(() => {
     </Card>
   );
 
-  const renderKPIs = () => (
-    <Card className="animate-in fade-in slide-in-from-bottom-4 border-2 border-slate-200 shadow-slate-100 duration-700">
-      <CardHeader className="bg-gradient-to-r from-slate-50 to-white">
-        <CardTitle className="flex items-center gap-3 text-2xl text-slate-900">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-800 shadow-lg">
-            <TrendingUp className="h-6 w-6 text-white" />
-          </div>
-          KPIs Globales
-        </CardTitle>
+const renderKPIs = () => {
+  // 1. USUARIOS POR ROL — 100% REAL
+  const usuariosPorRol = usuarios.reduce((acc: any[], user: any) => {
+    const rolName =
+      user.role === "gestor" ? "Gestor Documental" :
+      user.role === "aprobador" ? "Revisor" :
+      user.role === "auditor" ? "Auditor" :
+      "Usuario Final";
+
+    const existing = acc.find((item: any) => item.rol === rolName);
+    if (existing) {
+      existing.cantidad += 1;
+    } else {
+      acc.push({
+        rol: rolName,
+        cantidad: 1,
+        color:
+          user.role === "gestor" ? "#10B981" :
+          user.role === "aprobador" ? "#0EA5E9" :
+          user.role === "auditor" ? "#8B5CF6" : "#64748B"
+      });
+    }
+    return acc;
+  }, []);
+const estadoDocs = [
+    { 
+      name: "Aprobados", 
+      value: documentos.filter(d => 
+        d.etapa?.toLowerCase().includes("aprobad") || 
+        d.status?.toLowerCase().includes("aprobad")
+      ).length, 
+      color: "#10B981" 
+    },
+    { 
+      name: "En Revisión", 
+      value: documentos.filter(d => 
+        d.etapa?.toLowerCase().includes("cambio") ||
+        d.status?.toLowerCase().includes("revis")
+      ).length, 
+      color: "#0EA5E9" 
+    },
+    { 
+      name: "Pendientes", 
+      value: documentos.filter(d => 
+        d.etapa?.toLowerCase().includes("permiso")
+      ).length, 
+      color: "#F59E0B" 
+    },
+    { name: "Por Vencer", value: 0, color: "#EF4444" },
+  ];
+
+  return (
+    <div className="space-y-12">
+      <h2 className="text-4xl font-bold text-center text-gray-900 mb-12">
+        KPIs Globales del Sistema (Datos en tiempo real)
+      </h2>
+
+{/* TARJETAS REALES - CORREGIDAS */}
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+  <Card className="shadow-2xl bg-gradient-to-br from-sky-500 to-sky-600 text-white">
+    <CardContent className="p-8 text-center">
+      <User className="w-16 h-16 mx-auto mb-4 opacity-90" />
+      <p className="text-5xl font-black">{usuarios.length}</p>
+      <p className="text-xl mt-2">Usuarios Registrados</p>
+    </CardContent>
+  </Card>
+
+{/* APROBADOS - LOS QUE TÚ APRUEBAS EN EL ADMIN */}
+<Card className="shadow-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
+  <CardContent className="p-8 text-center">
+    <CheckCircle2 className="w-16 h-16 mx-auto mb-4 opacity-90" />
+    <p className="text-5xl font-black">
+      {usuarios.filter(u => u.is_approved === true).length}
+    </p>
+    <p className="text-xl mt-2">Aprobados</p>
+  </CardContent>
+</Card>
+
+{/* PENDIENTES - LOS QUE NO ESTÁN APROBADOS */}
+<Card className="shadow-2xl bg-gradient-to-br from-amber-500 to-amber-600 text-white">
+  <CardContent className="p-8 text-center">
+    <Clock className="w-16 h-16 mx-auto mb-4 opacity-90" />
+    <p className="text-5xl font-black">
+      {usuarios.filter(u => u.is_approved !== true).length}
+    </p>
+    <p className="text-xl mt-2">Pendientes</p>
+  </CardContent>
+</Card>
+
+  <Card className="shadow-2xl bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+    <CardContent className="p-8 text-center">
+      <TrendingUp className="w-16 h-16 mx-auto mb-4 opacity-90" />
+      <p className="text-5xl font-black">100%</p>
+      <p className="text-xl mt-2">Sistema Activo</p>
+    </CardContent>
+  </Card>
+</div>
+      {/* GRÁFICA 1: USUARIOS POR ROL (REAL) */}
+      {usuariosPorRol.length > 0 ? (
+        <Card className="shadow-2xl">
+          <CardHeader>
+            <CardTitle className="text-2xl">Usuarios por Rol</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={400}>
+              <PieChart>
+                <Pie data={usuariosPorRol} dataKey="cantidad" nameKey="rol" cx="50%" cy="50%" outerRadius={130}>
+                  {usuariosPorRol.map((entry, i) => (
+                    <Cell key={i} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value: number) => `${value} usuarios`} />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="text-center py-12">
+          <p className="text-gray-500">Aún no hay usuarios registrados</p>
+        </Card>
+      )}
+
+      {/* GRÁFICA 2: ESTADO DE DOCUMENTOS (REAL) */}
+<Card className="shadow-2xl">
+      <CardHeader>
+        <CardTitle className="text-2xl">Estado Actual de Documentos</CardTitle>
       </CardHeader>
-      <CardContent className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="border-slate-200 hover:shadow-md transition-shadow">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-sky-500">
-                <User className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <p className="text-3xl font-bold text-slate-900">{kpis.usuarios}</p>
-                <p className="text-sm text-slate-500">Usuarios Totales</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-slate-200 hover:shadow-md transition-shadow">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500">
-                <FileTextIcon className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <p className="text-3xl font-bold text-slate-900">{kpis.documentos}</p>
-                <p className="text-sm text-slate-500">Documentos Procesados</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-slate-200 hover:shadow-md transition-shadow">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-500">
-                <Clock className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <p className="text-3xl font-bold text-slate-900">{kpis.tiempo}</p>
-                <p className="text-sm text-slate-500">Tiempo Promedio</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-slate-200 hover:shadow-md transition-shadow">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-500">
-                <CheckCircle2 className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <p className="text-3xl font-bold text-slate-900">{kpis.cumplimiento}</p>
-                <p className="text-sm text-slate-500">Cumplimiento</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <CardContent>
+        {documentos.length === 0 ? (
+          <div className="text-center py-12 text-gray-500">
+            <p>Aún no hay documentos registrados</p>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height={350}>
+            <BarChart data={estadoDocs}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="value" fill="#0EA5E9" radius={[12, 12, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
       </CardContent>
     </Card>
+    </div>
   );
+};
 
   const renderReportes = () => (
     <Card className="animate-in fade-in slide-in-from-bottom-4 border-2 border-slate-200 shadow-slate-100 duration-700">
