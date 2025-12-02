@@ -1,52 +1,29 @@
 // src/pages/SelectRole.tsx
 import { useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Users, FileText, CheckCircle2, Shield, UserCheck, Sparkles, Lightbulb } from "lucide-react"
+import { Card } from "@/components/ui/card"
+import { Building2, Shield, FileText, Users, CheckCircle2, GraduationCap, UserCheck, Settings, Sparkles, Lightbulb } from "lucide-react"
 
 export default function SelectRole() {
   const navigate = useNavigate()
 
   const roles = [
-    {
-      role: "gestor",
-      title: "Jefe de Departamento",
-      desc: "Subo y gestiono documentos oficiales",
-      icon: <FileText className="w-12 h-12" />,
-      color: "from-emerald-500 to-emerald-600"
-    },
-    {
-      role: "aprobador",
-      title: "Subdirección / Revisor",
-      desc: "Apruebo y superviso documentos",
-      icon: <CheckCircle2 className="w-12 h-12" />,
-      color: "from-sky-500 to-sky-600"
-    },
-    {
-      role: "auditor",
-      title: "Auditor Interno",
-      desc: "Reviso cumplimiento normativo",
-      icon: <Shield className="w-12 h-12" />,
-      color: "from-purple-500 to-purple-600"
-    },
-    {
-      role: "solicitante",
-      title: "Estudiante o Personal",
-      desc: "Solicito trámites y consulto documentos",
-      icon: <Users className="w-12 h-12" />,
-      color: "from-slate-500 to-slate-600"
-    },
+    { role: "director", title: "Dirección", desc: "Aprobación final", icon: Building2, color: "bg-[#0A2A66]" },
+    { role: "subdirector", title: "Subdirección", desc: "Supervisión institucional", icon: Shield, color: "bg-[#145DA0]" },
+    { role: "gestor", title: "Jefe de Departamento", desc: "Gestión documental", icon: FileText, color: "bg-[#1E90FF]" },
+    { role: "coordinador", title: "Coordinador / Oficina", desc: "Registro diario", icon: Users, color: "bg-[#4DA6FF]" },
+    { role: "aprobador", title: "Personal Administrativo", desc: "Trámites internos", icon: CheckCircle2, color: "bg-[#7EC8E3]" },
+    { role: "solicitante", title: "Estudiante", desc: "Consulta y trámites", icon: GraduationCap, color: "bg-[#10B981]" },
+    { role: "auditor", title: "Auditor Interno", desc: "Revisión normativa", icon: UserCheck, color: "bg-[#F59E0B]" },
   ]
 
-  const handleSelectRole = (role: string) => {
-    // Guarda el rol temporalmente
+  const handleSelect = (role: string) => {
     localStorage.setItem("selected_role", role)
-    navigate("/auth?tab=login")
+    navigate("/auth")
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-sky-50/30 flex items-center justify-center p-4">
-      <div className="max-w-5xl w-full">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-sky-50 flex flex-col items-center justify-center p-6">
         {/* Logo */}
         <div className="text-center mb-12">
           <div className="flex justify-center items-center gap-4 mb-8">
@@ -62,44 +39,40 @@ export default function SelectRole() {
             ¿Quién eres en la institución?
           </h2>
           <p className="text-xl text-gray-600">
-            Selecciona tu rol para continuar
+            Selecciona para continuar
           </p>
         </div>
 
-{/* TARJETAS DE ROLES - PERFECTAS EN MÓVIL Y ESCRITORIO */}
-<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
-  {roles.map((r) => (
-    <Card
-      key={r.role}
-      className={`shadow-2xl hover:shadow-3xl transition-all duration-300 cursor-pointer transform hover:scale-105 border-0 bg-gradient-to-br ${r.color} text-white h-full`}
-      onClick={() => {
-  localStorage.setItem("selected_role", r.role)
-  navigate("/auth")  // ← SOLO AL LOGIN, NADA DE REGISTER
-}}
-    >
-      <CardContent className="p-6 md:p-8 text-center flex flex-col items-center justify-center h-full">
-        <div className="mb-4">{r.icon}</div>
-        <h3 className="text-xl md:text-2xl font-bold mb-2">{r.title}</h3>
-        <p className="text-sm md:text-base opacity-90 mb-4">{r.desc}</p>
-        <Button variant="secondary" size="sm" className="mt-auto bg-white/20 hover:bg-white/30">
-          Continuar
-        </Button>
-      </CardContent>
-    </Card>
-  ))}
-</div>
+      {/* GRID COMPACTO - TODO EN PANTALLA SIN SCROLL */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-5xl w-full">
+        {roles.map((r) => {
+          const Icon = r.icon
+          return (
+            <Card
+              key={r.role}
+              className={`shadow-2xl hover:shadow-3xl transition-all cursor-pointer hover:scale-105 ${r.color} text-white`}
+              onClick={() => handleSelect(r.role)}
+            >
+              <div className="p-8 text-center">
+                <Icon className="w-16 h-16 mx-auto mb-4" />
+                <h3 className="text-xl font-bold mb-2">{r.title}</h3>
+                <p className="text-sm opacity-90">{r.desc}</p>
+              </div>
+            </Card>
+          )
+        })}
+      </div>
 
-        {/* Admin oculto */}
-        <div className="text-center mt-12">
-          <Button
-            variant="ghost"
-            onClick={() => handleSelectRole("admin")}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            <UserCheck className="w-5 h-5 mr-2" />
-            Acceso Administrador
-          </Button>
-        </div>
+      {/* ADMIN OCULTO */}
+      <div className="mt-10">
+        <Button
+          variant="ghost"
+          onClick={() => handleSelect("admin")}
+          className="text-gray-500 hover:text-gray-700"
+        >
+          <Settings className="w-5 h-5 mr-2" />
+          Acceso Administrador
+        </Button>
       </div>
     </div>
   )

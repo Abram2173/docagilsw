@@ -244,63 +244,63 @@ const handleLoginSubmit = async (e: React.FormEvent) => {
           </form>
         )}
         {/* MODAL DE ÉXITO - BONITO Y PROFESIONAL */}
-        {showSuccessModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-            <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-10 text-center">
-              <div className="mx-auto mb-6 w-24 h-24 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center shadow-xl">
-                <CheckCircle2 className="w-14 h-14 text-white" />
-              </div>
-              
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                ¡Solicitud Enviada!
-              </h2>
-              
-              <p className="text-lg text-gray-700 mb-8">
-                Tu cuenta está pendiente de aprobación por el administrador.<br />
-                Te notificaremos cuando esté lista.
-              </p>
+  {showSuccessModal && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+      <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-10 text-center">
+        <div className="mx-auto mb-6 w-24 h-24 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center shadow-xl">
+          <CheckCircle2 className="w-14 h-14 text-white" />
+        </div>
+        
+        <h2 className="text-3xl font-bold text-gray-900 mb-4">
+          ¡Solicitud Enviada!
+        </h2>
+        
+        <p className="text-lg text-gray-700 mb-8">
+          Tu cuenta está pendiente de aprobación por el administrador.<br />
+          Te notificaremos cuando esté lista.
+        </p>
 
-              <Button
-                size="lg"
-                className="bg-gradient-to-r from-sky-600 to-emerald-600 hover:from-sky-700 hover:to-emerald-700 text-white text-xl px-12 py-7 rounded-2xl"
-                onClick={() => {
-                  setShowSuccessModal(false);
-                  navigate("/select-role");  // ← LO MANDA A SELECTROLE
-                }}
-              >
-                Volver al inicio
-              </Button>
-            </div>
-          </div>
-        )}
+        <Button
+          size="lg"
+          className="bg-gradient-to-r from-sky-600 to-emerald-600 hover:from-sky-700 hover:to-emerald-700 text-white text-xl px-12 py-7 rounded-2xl"
+          onClick={() => {
+            setShowSuccessModal(false);
+            navigate("/select-role");  // ← LO MANDA A SELECTROLE
+          }}
+        >
+          Volver al inicio
+        </Button>
+      </div>
+    </div>
+  )}
 
-        {/* MODAL - CUENTA PENDIENTE DE APROBACIÓN */}
-        {showPendingModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-            <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-10 text-center">
-              <div className="mx-auto mb-6 w-24 h-24 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center shadow-xl">
-                <Clock className="w-14 h-14 text-white" />
-              </div>
+  {/* MODAL - CUENTA PENDIENTE DE APROBACIÓN */}
+  {showPendingModal && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+      <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-10 text-center">
+        <div className="mx-auto mb-6 w-24 h-24 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center shadow-xl">
+          <Clock className="w-14 h-14 text-white" />
+        </div>
 
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                Cuenta Pendiente
-              </h2>
+        <h2 className="text-3xl font-bold text-gray-900 mb-4">
+          Cuenta Pendiente
+        </h2>
 
-              <p className="text-lg text-gray-700 mb-8 leading-relaxed">
-                Tu solicitud de acceso está siendo revisada por el administrador.<br />
-                Te notificaremos cuando tu cuenta sea aprobada.
-              </p>
+        <p className="text-lg text-gray-700 mb-8 leading-relaxed">
+          Tu solicitud de acceso está siendo revisada por el administrador.<br />
+          Te notificaremos cuando tu cuenta sea aprobada.
+        </p>
 
-              <Button
-                size="lg"
-                className="bg-gradient-to-r from-sky-600 to-emerald-600 hover:from-sky-700 hover:to-emerald-700 text-white text-xl px-12 py-7 rounded-2xl"
-                onClick={() => setShowPendingModal(false)}
-              >
-                Entendido
-              </Button>
-            </div>
-          </div>
-        )}
+        <Button
+          size="lg"
+          className="bg-gradient-to-r from-sky-600 to-emerald-600 hover:from-sky-700 hover:to-emerald-700 text-white text-xl px-12 py-7 rounded-2xl"
+          onClick={() => setShowPendingModal(false)}
+        >
+          Entendido
+        </Button>
+      </div>
+    </div>
+  )}
 
         {/* REGISTER (mantiene tu flujo de 2 pasos) */}
         {activeTab === "register" && (

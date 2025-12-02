@@ -28,14 +28,14 @@ export function DashboardHeader({ userName, role, onMenuToggle }: DashboardHeade
 
       <div className="relative flex items-center justify-between">
                   {/* BOTÓN MENÚ - SOLO EN MÓVIL */}
-<Button
-  variant="ghost"
-  size="icon"
-  className="lg:hidden text-black hover:bg-black/10 rounded-lg"
-  onClick={onMenuToggle}
->
-  <Menu className="h-14 w-14" />
-</Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="lg:hidden text-black hover:bg-black/10 rounded-lg"
+          onClick={onMenuToggle}
+        >
+          <Menu className="h-14 w-14" />
+        </Button>
 
         {/* LOGO DART OFICIAL */}
         <div className="flex items-center gap-3 group">
@@ -56,7 +56,6 @@ export function DashboardHeader({ userName, role, onMenuToggle }: DashboardHeade
             
           </div>
         </div>
-
 
 
                   {/* USUARIO */}
@@ -116,19 +115,19 @@ export function DashboardHeader({ userName, role, onMenuToggle }: DashboardHeade
             )}
           </div>
 
-{/* BOTÓN SALIR → VA AL INICIO (LANDING) */}
-<Button 
-  variant="ghost" 
-  size="sm" 
-  onClick={() => {
-    localStorage.clear();           // Borra todo
-    navigate("/");                  // ← VA AL INICIO (Landing)
-  }} 
-  className="gap-2 text-white hover:bg-white/20 transition-all"
->
-  <LogOut className="h-4 w-4" />
-  <span className="hidden md:inline font-semibold">Salir</span>
-</Button>
+          {/* BOTÓN SALIR → VA AL INICIO (LANDING) */}
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => {
+              localStorage.clear();           // Borra todo
+              navigate("/");                  // ← VA AL INICIO (Landing)
+            }} 
+            className="gap-2 text-white hover:bg-white/20 transition-all"
+          >
+            <LogOut className="h-4 w-4" />
+            <span className="hidden md:inline font-semibold">Salir</span>
+          </Button>
         </div>
       </div>
     </header>
