@@ -40,6 +40,7 @@ function ProtectedDashboard() {
       {role === 'auditor' && <AuditorPanel userName={fullName} role={role} />}
       {role === 'gestor' && <GestorDocumentalPanel userName={fullName} role={role} />}
       {role === 'admin' && <AdministradorPanel userName={fullName} role={role} />}
+      
 
       {/* USUARIO SIN ROL APROBADO */}
       {![ 'solicitante', 'aprobador', 'auditor', 'gestor', 'admin' ].includes(role) && (
@@ -73,6 +74,8 @@ function App() {
 
       {/* DASHBOARD */}
       <Route path="/dashboard" element={<ProtectedDashboard />} />
+
+      
 
       {/* RUTAS POR ROL */}
       <Route path="/solicitante" element={<ProtectedDashboard />} />
