@@ -1,6 +1,5 @@
 // src/App.tsx
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
 import Landing from './pages/Landing';
 import AuthPage from './pages/AuthPage';
 import MiCuenta from './pages/profile/MiCuenta';
@@ -30,26 +29,12 @@ const useAuth = () => {
 
   return { isLoggedIn, role, fullName, logout };
 };
+// ← QUITA TODO EL CÓDIGO DE allowedRoles y currentPath
+// ← DEJA SOLO EL PANEL SEGÚN ROL
 
 function ProtectedDashboard() {
   const { isLoggedIn, role, fullName } = useAuth();
-  const navigate = useNavigate();
-
-  // ← PROTECCIÓN CONTRA BOTÓN ATRÁS
-  useEffect(() => {
-    const handleBack = (e: PopStateEvent) => {
-      e.preventDefault();
-      const confirm = window.confirm("¿Estás seguro de que quieres salir del panel?");
-      if (confirm) {
-        localStorage.clear();
-        navigate("/auth");
-      } else {
-        window.history.pushState(null, "", window.location.href);
-      }
-    };
-    window.addEventListener("popstate", handleBack);
-    return () => window.removeEventListener("popstate", handleBack);
-  }, [navigate]);
+  const navigate = useNavigate(); // ← AÑADE ESTA LÍNEA AQUÍ
 
   if (!isLoggedIn) {
     return <Navigate to="/auth" replace />;
@@ -66,19 +51,13 @@ function ProtectedDashboard() {
       {role === 'subdirector' && <SubdirectorPanel userName={fullName} role={role} />}
       {role === 'coordinador' && <CoordinadorPanel userName={fullName} role={role} />}
 
-      {/* SIN ROL O NO APROBADO */}
-      {![
-        'solicitante', 'aprobador', 'auditor', 'gestor',
-        'admin', 'director', 'subdirector', 'coordinador'
-      ].includes(role) && (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-orange-50">
-          <div className="text-center p-10 bg-white rounded-3xl shadow-2xl max-w-md border">
-            <h2 className="text-3xl font-bold text-red-600 mb-4">Acceso Pendiente</h2>
-            <p className="text-lg text-gray-700 mb-6">
-              Tu cuenta está en revisión por el administrador.
-            </p>
-            <Button onClick={() => window.location.href = '/'} className="bg-red-600 hover:bg-red-700">
-              Volver al inicio
+      {/* SIN ROL */}
+      {!role && (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center p-10 bg-white rounded-3xl shadow-2xl">
+            <h2 className="text-3xl font-bold text-red-600 mb-4">Selecciona tu rol</h2>
+            <Button onClick={() => navigate("/select-role")}>
+              Ir a selección de rol
             </Button>
           </div>
         </div>

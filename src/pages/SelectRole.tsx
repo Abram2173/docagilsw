@@ -2,25 +2,22 @@
 import { useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Building2, Shield, FileText, Users, CheckCircle2, GraduationCap, UserCheck, Settings, Sparkles, Lightbulb } from "lucide-react"
+import { Building2, Shield, FileText, CheckCircle2, GraduationCap, Settings, Sparkles, Lightbulb } from "lucide-react"
 
 export default function SelectRole() {
   const navigate = useNavigate()
 
   const roles = [
-    { role: "director", title: "Dirección", desc: "Aprobación final", icon: Building2, color: "bg-[#0A2A66]" },
-    { role: "subdirector", title: "Subdirección", desc: "Supervisión institucional", icon: Shield, color: "bg-[#145DA0]" },
+    { role: "director", title: "Dirección", desc: "Aprobación final", icon: Building2, color: "bg-[#D64545]" },
+    { role: "subdirector", title: "Subdirección", desc: "Supervisión institucional", icon: Shield, color: "bg-[#2A6F97]" },
     { role: "gestor", title: "Jefe de Departamento", desc: "Gestión documental", icon: FileText, color: "bg-[#1E90FF]" },
-    { role: "coordinador", title: "Coordinador / Oficina", desc: "Registro diario", icon: Users, color: "bg-[#4DA6FF]" },
-    { role: "aprobador", title: "Personal Administrativo", desc: "Trámites internos", icon: CheckCircle2, color: "bg-[#7EC8E3]" },
-    { role: "solicitante", title: "Estudiante", desc: "Consulta y trámites", icon: GraduationCap, color: "bg-[#10B981]" },
-    { role: "auditor", title: "Auditor Interno", desc: "Revisión normativa", icon: UserCheck, color: "bg-[#F59E0B]" },
+    { role: "aprobador", title: "Personal Administrativo", desc: "Trámites internos", icon: CheckCircle2, color: "bg-[#4CAF50]" },
+    { role: "solicitante", title: "Estudiante", desc: "Consulta y trámites", icon: GraduationCap, color: "bg-[#F4A100]" },
   ]
-
-  const handleSelect = (role: string) => {
-    localStorage.setItem("selected_role", role)
-    navigate("/auth")
-  }
+const handleSelect = (role: string) => {
+  localStorage.setItem("role", role)  // ← CAMBIA AQUÍ
+  navigate("/dashboard")              // ← VA DIRECTO AL DASHBOARD
+}
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-sky-50 flex flex-col items-center justify-center p-6">

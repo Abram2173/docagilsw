@@ -129,7 +129,6 @@ const handleRegisterSubmit = async (e: React.FormEvent) => {
   }
 };
 
-  // === LOGIN SUBMIT (SIMPLE Y LIMPIO) ===
 const handleLoginSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
   setIsSubmitting(true);
@@ -141,23 +140,21 @@ const handleLoginSubmit = async (e: React.FormEvent) => {
       password: loginPassword,
     });
 
-    const { token, role, full_name } = response.data;
+    const { token, full_name } = response.data;
+
     localStorage.setItem("token", token);
-    localStorage.setItem("role", role);
     localStorage.setItem("full_name", full_name || loginUsername);
 
-    navigate("/dashboard");
-  } catch (error: any) {
-    console.error("Error login:", error.response);
+    // ← BORRA EL ROL ANTERIOR (para que siempre elija)
+    localStorage.removeItem("role");
 
-    // ← SI NO ESTÁ APROBADO → ABRE EL MODAL
-    if (error.response?.status === 403 || 
-        error.response?.data?.detail?.includes("aprob") ||
-        error.response?.data?.non_field_errors?.[0]?.includes("aprob")) {
+    // ← SIEMPRE VA A SELECTROLE
+    navigate("/select-role");
+
+  } catch (error: any) {
+    if (error.response?.status === 403 || error.response?.data?.detail?.includes("aprob")) {
       setShowPendingModal(true);
-    } 
-    // ← SI ES CONTRASEÑA MAL → MENSAJE NORMAL
-    else {
+    } else {
       setErrorMsg("Usuario o contraseña incorrectos");
     }
   } finally {
