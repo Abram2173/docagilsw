@@ -23,7 +23,7 @@ export function DashboardSidebar({ items, isOpen, onClose }: DashboardSidebarPro
       )}
 
       <aside className={cn(
-        "fixed inset-y-0 left-0 z-50 w-64 bg-slate-800 p-6 transform transition-transform duration-300 lg:translate-x-0 lg:static",
+        "fixed inset-y-0 left-0 z-50 w-64 bg-slate-300 p-6 transform transition-transform duration-300 lg:translate-x-0 lg:static",
         isOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <nav className="space-y-3">
@@ -32,8 +32,8 @@ export function DashboardSidebar({ items, isOpen, onClose }: DashboardSidebarPro
               key={i}
               onClick={item.onClick}   // ← SOLO EJECUTA TU FUNCIÓN, NO CIERRA
               className={cn(
-                "flex items-center gap-4 rounded-xl px-5 py-4 text-white cursor-pointer transition-all",
-                item.isActive ? "bg-green-600 font-bold" : "hover:bg-slate-700"
+                "flex items-center gap-4 rounded-xl px-5 py-4 text-black cursor-pointer transition-all",
+                item.isActive ? "bg-green-600 font-bold" : "hover:bg-slate-400"
               )}
             >
               {item.icon}

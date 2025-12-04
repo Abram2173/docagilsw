@@ -84,9 +84,54 @@ h1 {
   transition: transform 0.3s ease-in-out;
 }
 
-/* Siempre visible en escritorio */
-@media (min-width: 1024px) {
-  .dashboard-sidebar {
-    transform: translateX(0) !important;
+/* LOOP 360° INFINITO — COMO LA IMAGEN QUE MANDAS */
+@keyframes infinite-loop {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-infinite-loop {
+  display: flex;
+  width: max-content;
+  animation: infinite-loop 120s linear infinite;
+}
+
+.animate-infinite-loop:hover {
+  animation-play-state: paused;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+/* RESPONSIVE MÓVIL — FUNCIONA PERFECTO CON TAILWIND */
+/* @media (max-width: 640px) {
+  .mobile-card {
+    @apply min-w-80 max-w-96 mx-4;
+  }
+  
+  .mobile-gap {
+    @apply gap-6;
+  }
+  
+  .mobile-arrow {
+    @apply w-16 h-16 text-5xl;
+  }
+  
+  .mobile-text {
+    @apply text-lg leading-tight;
+  }
+  
+  .mobile-badge {
+    @apply text-base px-6 py-3;
   }
 }
+
+@media (max-width: 380px) {
+  .mobile-card {
+    @apply min-w-72;
+  }
+} */
