@@ -9,7 +9,7 @@ import SelectRole from './pages/SelectRole';
 import SolicitantePanel from './components/roles/SolicitantePanel';
 import AprobadorPanel from './components/roles/AprobadorPanel';
 import AuditorPanel from './components/roles/AuditorPanel';
-import GestorDocumentalPanel from './components/roles/GestorDocumentalPanel';
+import GestorDocumentalPanel from './components/roles/JefeDepartamentoPanel';
 import AdministradorPanel from './components/roles/AdministradorPanel';
 import DirectorPanel from './components/roles/DirectorPanel';
 import SubdirectorPanel from './components/roles/SubdirectorPanel';

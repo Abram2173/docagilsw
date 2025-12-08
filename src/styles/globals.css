@@ -93,11 +93,19 @@ h1 {
 .animate-infinite-loop {
   display: flex;
   width: max-content;
-  animation: infinite-loop 120s linear infinite;
+  animation: infinite-loop 90s linear infinite;
 }
 
 .animate-infinite-loop:hover {
   animation-play-state: paused;
+}
+@media (max-width: 640px) {
+  .animate-infinite-loop {
+    gap: 1rem;
+  }
+  .animate-infinite-loop > * {
+    min-width: 320px;
+  }
 }
 
 .scrollbar-hide {

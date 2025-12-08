@@ -1,6 +1,6 @@
 // src/pages/AuthPage.tsx  ← VERSIÓN FINAL CORREGIDA (login compacto + animación perfecta)
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import logo from '../assets/logo.png';
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -46,14 +46,35 @@ export default function AuthPage() {
   const [showPendingModal, setShowPendingModal] = useState(false);
 
   // === Tus validaciones y handlers (sin cambios) ===
-  const validateEmail = (email: string) => {
-    if (email && !email.endsWith("@instituto.edu.mx")) {
-      setEmailError("El correo debe ser institucional (@instituto.edu.mx)");
-      return false;
-    }
+const validateEmail = (email: string) => {
+  const lowerEmail = email.toLowerCase().trim();
+  
+  const isValid = 
+    lowerEmail.endsWith('@instituto.edu.mx') || 
+    lowerEmail.endsWith('.tecnm.mx');
+
+  if (email && !isValid) {
+    setEmailError("Solo correos institucionales del TecNM (@instituto.edu.mx o @*.tecnm.mx)");
+    return false;
+  }
+  
+  setEmailError("");
+  return true;
+};
+
+// === VALIDACIÓN DE EMAIL (CORRECTA) ===
+useEffect(() => {
+  const isValid = 
+    registerEmail.trim() === "" || 
+    registerEmail.toLowerCase().endsWith('@instituto.edu.mx') || 
+    registerEmail.toLowerCase().endsWith('.tecnm.mx');
+
+  if (registerEmail && !isValid) {
+    setEmailError("Solo correos institucionales del TecNM");
+  } else {
     setEmailError("");
-    return true;
-  };
+  }
+}, [registerEmail]);
 
   const handleRegisterEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setRegisterEmail(e.target.value);
@@ -115,36 +136,23 @@ export default function AuthPage() {
 const handleLoginSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
   setIsSubmitting(true);
-  setErrorMsg(""); // limpiamos cualquier mensaje anterior
+  setErrorMsg("");
 
   try {
     const { data } = await axios.post(`${API_BASE}/auth/login/`, {
-      username: loginUsername,
+      username: loginUsername,  // ← CAMBIA A "username" (usa el email como username)
       password: loginPassword,
     });
 
     localStorage.setItem("token", data.token);
-    localStorage.setItem("full_name", data.full_name || loginUsername);
-    localStorage.removeItem("role");
-    navigate("/select-role");
+    localStorage.setItem("role", data.role);
+    localStorage.setItem("userName", data.full_name || loginUsername.split('@')[0]);
+
+    navigate("/dashboard");
   } catch (error: any) {
-    // ← AQUÍ ESTÁ LA MAGIA (detecta TODOS los casos de cuenta pendiente)
-    const responseData = error.response?.data;
-    const status = error.response?.status;
-
-    const isPending = 
-      status === 403 || 
-      status === 401 ||
-      (responseData?.detail && (
-        /pendiente|aprob|revis|aprobar|activar|pending|not approved|espera|administrador/i.test(responseData.detail)
-      )) ||
-      (responseData?.non_field_errors && responseData.non_field_errors.some((msg: string) =>
-        /pendiente|aprob|revis|aprobar|activar|pending|not approved|espera|administrador/i.test(msg)
-      ));
-
-    if (isPending) {
-      setShowPendingModal(true);     // ← Modal bonito con reloj
-      setErrorMsg("");               // ← NO mostramos el mensaje rojo
+    if (error.response?.status === 403) {
+      setShowPendingModal(true);
+      setErrorMsg("");
     } else {
       setErrorMsg("Usuario o contraseña incorrectos");
     }
@@ -152,6 +160,8 @@ const handleLoginSubmit = async (e: React.FormEvent) => {
     setIsSubmitting(false);
   }
 };
+
+
 
   return (
     <div className="min-h-screen flex items-center justify-center p-8 lg:p-16 bg-gradient-to-br from-sky-50 via-white to-emerald-50">
@@ -241,22 +251,21 @@ const handleLoginSubmit = async (e: React.FormEvent) => {
                       </div>
                       <Input placeholder="Teléfono" value={phone} onChange={e => setPhone(e.target.value)} className="h-12" />
                       <Input placeholder="Departamento" value={department} onChange={e => setDepartment(e.target.value)} required className="h-12" />
-                    <Button
-                      type="button"
-                      onClick={nextStep}
-                      disabled={
-                        !fullName.trim() ||
-                        !registerEmail.trim() ||
-                        !department.trim() ||
-                        emailError !== "" ||           // si el correo no es institucional
-                        !registerEmail.endsWith("@instituto.edu.mx")
-                      }
-                      className="w-full h-12 text-lg font-bold rounded-xl transition-all duration-200
-                        disabled:bg-gray-400 disabled:cursor-not-allowed disabled:text-gray-200
-                        bg-sky-500 hover:bg-sky-600 text-white"
-                    >
-                      Siguiente
-                    </Button>                   
+                  <Button
+                    type="button"
+                    onClick={nextStep}
+                    disabled={
+                      !fullName.trim() ||
+                      !registerEmail.trim() ||
+                      !department.trim() ||
+                      emailError !== ""
+                    }
+                    className="w-full h-12 text-lg font-bold rounded-xl transition-all duration-200
+                      disabled:bg-gray-400 disabled:cursor-not-allowed disabled:text-gray-200
+                      bg-gradient-to-r from-sky-600 to-emerald-600 hover:from-sky-700 hover:to-emerald-700 text-white shadow-lg"
+                  >
+                    Siguiente
+                  </Button>                 
                     </>
                   )}
 

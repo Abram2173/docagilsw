@@ -191,18 +191,11 @@ const handleSubmit = async (e: React.FormEvent) => {
 
 
 
-
 const [selectedTramite, setSelectedTramite] = useState<any>(null);
+
 const carouselRef = useRef<HTMLDivElement>(null);
 
-const scrollLeft = () => {
-  carouselRef.current?.scrollBy({ left: -360, behavior: "smooth" });
-};
-
-const scrollRight = () => {
-  carouselRef.current?.scrollBy({ left: 360, behavior: "smooth" });
-};
-
+// === LISTA DE TRÁMITES ===
 const tramitesList = [
   { titulo: "Becas Jóvenes escribiendo el futuro 2025", descripcion: "Apoyo económico para estudiantes de nivel medio superior", categoria: "Becas", badgeColor: "bg-amber-500" },
   { titulo: "Calendario Escolar Agosto – Diciembre 2025", descripcion: "Fechas oficiales del ciclo escolar actual", categoria: "Calendario", badgeColor: "bg-emerald-500" },
@@ -214,6 +207,7 @@ const tramitesList = [
   { titulo: "Buzón de Quejas y Sugerencias", descripcion: "Haz llegar tu voz al instituto", categoria: "Participación", badgeColor: "bg-orange-500" },
 ];
 
+// === TARJETA REUTILIZABLE ===
 const TarjetaTramite = ({ item }: { item: any }) => (
   <button
     onClick={() => {
@@ -221,7 +215,7 @@ const TarjetaTramite = ({ item }: { item: any }) => (
       setTitulo(item.titulo);
       handleTipoChange(item.categoria.toLowerCase());
     }}
-    className="w-full max-w-[340px] min-w-[300px] sm:min-w-[380px] bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-400 border border-gray-100 group hover:-translate-y-4 flex-shrink-0 overflow-hidden flex flex-col"
+    className="w-full max-w-[240px] min-w-[300px] sm:min-w-[280px] bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-400 border border-gray-100 group hover:-translate-y-4 flex-shrink-0 overflow-hidden flex flex-col"
   >
     <div className="p-6 sm:p-8 text-left flex-1">
       <h3 className="font-bold text-gray-800 text-lg sm:text-2xl leading-tight mb-3">
@@ -247,6 +241,7 @@ const TarjetaTramite = ({ item }: { item: any }) => (
   </button>
 );
 
+// === renderCrearTramite() FINAL Y PERFECTO ===
 const renderCrearTramite = () => (
   <Card className="border-0 shadow-2xl rounded-3xl overflow-hidden">
     <CardHeader className="bg-gradient-to-br from-blue-50 to-cyan-50 pb-8">
@@ -266,38 +261,32 @@ const renderCrearTramite = () => (
       {!selectedTramite ? (
         <div className="space-y-8">
           {/* CARRUSEL INFINITO + RESPONSIVE */}
-          <div className="overflow-hidden rounded-3xl bg-gradient-to-r from-blue-50/30 via-white to-emerald-50/30 shadow-inner">
-            <div 
-              ref={carouselRef}
-              className="overflow-x-auto scrollbar-hide scroll-smooth"
-            >
-              <div className="flex animate-infinite-loop gap-6 sm:gap-8 px-4 sm:px-6 py-8">
-                {/* LOOP INFINITO 360° */}
-                {tramitesList.map((item) => (
-                  <TarjetaTramite key={`a-${item.titulo}`} item={item} />
-                ))}
-                {tramitesList.map((item) => (
-                  <TarjetaTramite key={`b-${item.titulo}`} item={item} />
-                ))}
-              </div>
-            </div>
-          </div>
+{/* CARRUSEL SIN DUPLICAR + FLECHAS + VUELTA AL INICIO */}
+<div className="space-y-10">
+  <div className="overflow-hidden rounded-3xl bg-gradient-to-r from-blue-50/30 via-white to-emerald-50/30 shadow-inner">
+    <div 
+      ref={carouselRef}
+      className="overflow-x-auto scrollbar-hide scroll-smooth"
+    >
+      <div className="flex gap-8 px-6 py-10">
+        {tramitesList.map((item, index) => (
+          <TarjetaTramite key={index} item={item} />
+        ))}
+      </div>
+    </div>
+  </div>
 
-          {/* FLECHAS ABAJO */}
-          <div className="flex justify-center items-center gap-10 sm:gap-12 py-4">
-            <button
-              onClick={scrollLeft}
-              className="w-14 h-14 sm:w-16 sm:h-16 bg-white/90 backdrop-blur-sm hover:bg-white rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 border-2 border-gray-200 hover:border-blue-400"
-            >
-              <span className="text-3xl sm:text-4xl text-blue-600 font-bold">←</span>
-            </button>
-            <button
-              onClick={scrollRight}
-              className="w-14 h-14 sm:w-16 sm:h-16 bg-white/90 backdrop-blur-sm hover:bg-white rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 border-2 border-gray-200 hover:border-blue-400"
-            >
-              <span className="text-3xl sm:text-4xl text-blue-600 font-bold">→</span>
-            </button>
-          </div>
+  {/* FLECHAS ABAJO */}
+{/* FLECHAS (opcional) */}
+<div className="flex justify-center items-center gap-12 py-6">
+  <button onClick={() => carouselRef.current?.scrollBy({ left: -400, behavior: "smooth" })}>
+    ←
+  </button>
+  <button onClick={() => carouselRef.current?.scrollBy({ left: 400, behavior: "smooth" })}>
+    →
+  </button>
+</div>
+</div>
         </div>
       ) : (
   /* === TU FORMULARIO === */
