@@ -119,7 +119,7 @@ export default function Landing() {
         </div>
 
         {/* Sección final */}
-        <div className="text-center py-16 bg-white/70 rounded-3xl backdrop-blur-sm border border-gray-100 shadow-2xl">
+        {/* <div className="text-center py-16 bg-white/70 rounded-3xl backdrop-blur-sm border border-gray-100 shadow-2xl">
           <h3 className="text-4xl font-bold text-gray-900 mb-6">
             Transforma tu institución con Dart
           </h3>
@@ -131,7 +131,7 @@ export default function Landing() {
             <div className="flex items-center gap-3"><CheckCircle className="w-8 h-8 text-[#10B981]" /> Acceso desde cualquier dispositivo</div>
             <div className="flex items-center gap-3"><CheckCircle className="w-8 h-8 text-[#10B981]" /> Soporte especializado</div>
           </div>
-        </div>
+        </div> */}
       </main>
     </div>
   )

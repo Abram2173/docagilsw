@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Settings, FileText, Database, Clock, CheckCircle2, FileText as FileTextIcon, User, Loader2, TrendingUp, X, Users, } from "lucide-react";
+import { Settings, FileText, Database, Clock, CheckCircle2, FileText as FileTextIcon, User, Loader2, TrendingUp, X, Users, Workflow, BarChart3, HelpCircle, } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DashboardHeader } from "../dashboard-header";
 // ← AQUÍ AGREGAS ESTO
@@ -23,6 +23,15 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+
 
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api" + "/";  // Render en prod
@@ -587,11 +596,68 @@ return (
           "flex-1 transition-all duration-300 p-2 sm:p-4 lg:p-6 overflow-y-auto w-full",
           isSidebarOpen ? "lg:ml-0 ml-0" : "ml-0"
         )}>
+          
           <div className="mx-auto max-w-7xl space-y-6 w-full">
             {renderSection()}
           </div>
         </main>
       </div>
+
+{/* BOTÓN DE AYUDA */}
+<div className="flex justify-end mb-6">
+  <Dialog>
+    <DialogTrigger asChild>
+      <Button variant="outline" size="lg" className="gap-3">
+        <HelpCircle className="h-6 w-6" />
+        ¿Qué hace cada sección?
+      </Button>
+    </DialogTrigger>
+    <DialogContent className="max-w-2xl">
+      <DialogHeader>
+        <DialogTitle className="text-2xl">Guía del Panel Administrador</DialogTitle>
+        <DialogDescription>
+          Información sobre las funciones de cada sección.
+        </DialogDescription>
+      </DialogHeader>
+
+      <div className="mt-6 space-y-4 text-left text-base">
+        <div className="flex items-start gap-3">
+          <Users className="h-6 w-6 text-blue-600 mt-1" />
+          <div>
+            <strong>Usuarios</strong>: Crear, editar, aprobar o rechazar cuentas de todos los roles.
+          </div>
+        </div>
+        <div className="flex items-start gap-3">
+          <Workflow className="h-6 w-6 text-green-600 mt-1" />
+          <div>
+            <strong>Flujos</strong>: Configurar los pasos de cada tipo de trámite.
+          </div>
+        </div>
+        <div className="flex items-start gap-3">
+          <BarChart3 className="h-6 w-6 text-purple-600 mt-1" />
+          <div>
+            <strong>KPIs Globales</strong>: Ver estadísticas generales del sistema.
+          </div>
+        </div>
+        <div className="flex items-start gap-3">
+          <FileText className="h-6 w-6 text-orange-600 mt-1" />
+          <div>
+            <strong>Reportes</strong>: Generar reportes en PDF/Excel.
+          </div>
+        </div>
+        <div className="flex items-start gap-3">
+          <Settings className="h-6 w-6 text-gray-600 mt-1" />
+          <div>
+            <strong>Mantenimiento</strong>: Configuraciones avanzadas y respaldo del sistema.
+          </div>
+        </div>
+      </div>
+    </DialogContent>
+  </Dialog>
+</div>
+
+
+
 {/* BOTÓN FLOTANTE - SOLO EN LA SECCIÓN "KPIs Globales" */}
 {currentSection === "kpis" && (
   <div className="fixed bottom-8 right-6 z-50 lg:hidden">

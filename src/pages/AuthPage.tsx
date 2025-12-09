@@ -298,7 +298,6 @@ const handleLoginSubmit = async (e: React.FormEvent) => {
       <SelectContent>
         <SelectItem value="solicitante">Usuario Final (Estudiante / Personal)</SelectItem>
         <SelectItem value="revisor">Revisor / Aprobador</SelectItem>
-        <SelectItem value="auditor">Auditor Interno</SelectItem>
         <SelectItem value="gestor">Gestor Documental</SelectItem>
       </SelectContent>
     </Select>
