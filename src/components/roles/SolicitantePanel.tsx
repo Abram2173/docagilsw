@@ -11,10 +11,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { FileText, Bell, CheckCircle2, Loader2, RefreshCw } from "lucide-react";
+import { FileText, Bell, CheckCircle2, Loader2, RefreshCw, Package, HelpCircle } from "lucide-react";
 import { generateFolio, generateQRData } from "@/lib/folio-generator";
 import { DashboardHeader } from "../dashboard-header";
-import {QRCodeSVG} from "qrcode.react"; // ← ESTO ES LO ÚNICO QUE FALTABA
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+
 
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";  // Render en prod
@@ -22,7 +31,6 @@ const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";  /
 const sidebarItems = [
   { label: "Crear Trámite", href: "/solicitante", icon: "➕" },
   { label: "Mis Trámites", href: "/solicitante/tramites", icon: "📋" },
-  { label: "Notificaciones", href: "/solicitante/notificaciones", icon: "🔔" },
 ];
 
 interface SolicitantePanelProps {
@@ -39,7 +47,7 @@ export default function SolicitantePanel({ role, userName }: SolicitantePanelPro
   const [contenido, setContenido] = useState("");
   const [folio, setFolio] = useState("");
   const [, setQrData] = useState("");
-  const [, setShowQR] = useState(false);
+  const [] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [tramites, setTramites] = useState<Tramite[]>([]);
   const [notificaciones, setNotificaciones] = useState([]);
@@ -49,6 +57,63 @@ export default function SolicitantePanel({ role, userName }: SolicitantePanelPro
   const [isLoading, setIsLoading] = useState(false);
 
   const token = localStorage.getItem("token");
+
+
+  const [tramiteEditandoId, setTramiteEditandoId] = useState<number | null>(null);
+  const [tramiteACancelar, setTramiteACancelar] = useState<number | null>(null);
+  const [tramiteSeleccionado, setTramiteSeleccionado] = useState<any>(null);
+
+  const handleVerResultado = (tramite: any) => {
+  setTramiteSeleccionado(tramite);
+};
+
+
+  
+const handleEditarTramite = (tramite: any) => {
+  // GUARDA EL TRÁMITE COMPLETO (esto es lo que faltaba)
+  setSelectedTramite(tramite);
+
+  // Precarga todo
+  setTitulo(tramite.titulo || tramite.nombre || "");
+  setTipo(tramite.etapa || tramite.tipo || "");
+  setContenido(tramite.contenido || ""); // ← EL TEXTO QUE ESCRIBIÓ
+
+  // Carga el archivo adjunto
+  if (tramite.archivo) {
+    fetch(tramite.archivo)
+      .then(res => res.blob())
+      .then(blob => {
+        const fileName = tramite.archivo.split("/").pop() || "archivo_adjunto";
+        const file = new File([blob], fileName, { type: blob.type });
+        setFile(file);
+      })
+      .catch(() => console.log("No se pudo cargar el archivo"));
+  } else {
+    setFile(null);
+  }
+
+  // Indica que estamos editando
+  setTramiteEditandoId(tramite.id);
+
+  setCurrentSection("crear");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+};
+
+const handleCancelarTramite = (id: number) => {
+  setTramiteACancelar(id);
+};
+
+
+const confirmarCancelacion = () => {
+  if (!tramiteACancelar) return;
+
+  // Solo lo quitamos de la lista del estudiante (frontend)
+  setTramites(prev => prev.filter(t => t.id !== tramiteACancelar));
+  
+  alert("¡Trámite cancelado correctamente! Ya no aparecerá en tu lista.");
+  setTramiteACancelar(null);
+};
+
 
 interface Tramite {
   id: number;
@@ -145,50 +210,46 @@ const handleSubmit = async (e: React.FormEvent) => {
     return;
   }
   setIsSubmitting(true);
+
   try {
     const formData = new FormData();
     formData.append('titulo', titulo);
     formData.append('tipo', tipo);
     formData.append('contenido', contenido);
     if (file) formData.append('archivo', file);
-    // QUITA 'folio' — el backend lo genera, no lo envíes
 
     const token = localStorage.getItem('token');
-    const headers = { 
-      Authorization: `Token ${token}`,
-      // NO pongas Content-Type — FormData lo maneja solo
-    };
+    const headers = { Authorization: `Token ${token}` };
 
-    console.log("Enviando datos:", { titulo, tipo, contenido, archivo: file?.name }); // ← Para debug
+    if (tramiteEditandoId) {
+      // EDITAR = BORRAR + CREAR NUEVO
+      // 1. Borra el viejo
+      await axios.delete(`${API_BASE}/solicitante/tramites/${tramiteEditandoId}/`, { headers });
+      
+      // 2. Crea el nuevo
+      
+      alert("Trámite actualizado correctamente");
+    } else {
+      // CREAR NUEVO
+      const response = await axios.post(`${API_BASE}/solicitante/create-tramite/`, formData, { headers });
+      alert(`Trámite creado con folio: ${response.data.folio}`);
+    }
 
-    const response = await axios.post(`${API_BASE}/solicitante/create-tramite/`, formData, { headers });
-    
-    console.log("Respuesta backend:", response.data); // ← Para debug
-
-    setFolio(response.data.folio || 'GENERADO');
-    setQrData(response.data.qr_data || 'QR_DATA');
-    setShowQR(true);
-    
-    setTimeout(() => {
-      alert(`Trámite creado con folio: ${response.data.folio || folio}`);
-      setTitulo("");
-      setTipo("");
-      setContenido("");
-      setFolio("");
-      setQrData("");
-      setFile(null);
-      setShowQR(false);
-      // No hagas reload — solo limpia el form
-      setSelectedTramite(null); // ← Vuelve al carrusel
-    }, 3000);
+    // Limpia todo
+    setTitulo("");
+    setTipo("");
+    setContenido("");
+    setFile(null);
+    setSelectedTramite(null);
+    setTramiteEditandoId(null);
+    setCurrentSection("tramites");
+    fetchTramites();
   } catch (err: any) {
-    console.error("Error completo:", err.response?.data || err); // ← ESTO TE DICE QUÉ FALTA
-    alert("Error al enviar: " + (err.response?.data?.error || err.message || 'Inténtalo de nuevo'));
+    alert("Error: " + (err.response?.data?.error || "Inténtalo de nuevo"));
   } finally {
     setIsSubmitting(false);
   }
 };
-
 
 
 const [selectedTramite, setSelectedTramite] = useState<any>(null);
@@ -356,58 +417,91 @@ const renderMisTramites = () => (
       ) : (
         <div className="overflow-x-auto rounded-lg border border-gray-200">
           <Table>
-            <TableHeader>
-              <TableRow className="bg-blue-50">
-                <TableHead className="font-bold text-blue-800">Folio</TableHead>
-                <TableHead className="font-bold text-blue-800">Trámite</TableHead>
-                <TableHead className="font-bold text-blue-800">Tipo</TableHead>
-                <TableHead className="font-bold text-blue-800">Estado</TableHead>
-                <TableHead className="font-bold text-blue-800">Fecha</TableHead>
-                <TableHead className="font-bold text-blue-800">Archivo</TableHead>
-                <TableHead className="font-bold text-blue-800 text-center">QR</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {tramites.map((t) => (
-                <TableRow key={t.id} className="hover:bg-blue-50 transition-colors">
-                <TableCell className="w-32 sm:w-40">
-                  <div className="font-mono font-bold text-blue-600 text-xs sm:text-sm leading-tight">
-                    {t.folio}
-                  </div>
-                </TableCell>
-                  <TableCell className="font-medium">
-                    {t.nombre || t.titulo || "Sin título"}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">
-                      {t.etapa || t.tipo || "General"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={t.status === "Pendiente" || t.estado === "Pendiente" ? "bg-orange-500" : "bg-green-500"}>
-                      {t.status || t.estado || "Pendiente"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {t.created_at ? new Date(t.created_at).toLocaleDateString('es-MX') : t.fecha || "—"}
-                  </TableCell>
-                  <TableCell>
-                    {t.archivo ? (
-                      <a href={t.archivo} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                        Descargar
-                      </a>
-                    ) : (
-                      <span className="text-gray-500">No adjunto</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <div className="inline-block p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-all">
-                      <QRCodeSVG value={t.qr || t.folio || "sin-qr"} size={48} />
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
+<TableHeader>
+  <TableRow className="bg-blue-50">
+    <TableHead className="font-bold text-blue-800">Folio</TableHead>
+    <TableHead className="font-bold text-blue-800">Trámite</TableHead>
+    <TableHead className="font-bold text-blue-800">Tipo</TableHead>
+    {/* QUITAMOS LA COLUMNA "ESTADO" */}
+    <TableHead className="font-bold text-blue-800">Fecha</TableHead>
+    <TableHead className="font-bold text-blue-800">Archivo</TableHead>
+    <TableHead className="font-bold text-blue-800 text-center">Acciones</TableHead>
+  </TableRow>
+</TableHeader>
+
+<TableBody>
+  {tramites.map((t) => {
+    const esEditable = t.status === "Pendiente" || t.estado === "Pendiente";
+    
+    return (
+      <TableRow key={t.id} className="hover:bg-blue-50 transition-colors">
+        <TableCell className="w-32 sm:w-40">
+          <div className="font-mono font-bold text-blue-600 text-xs sm:text-sm leading-tight">
+            {t.folio}
+          </div>
+        </TableCell>
+        <TableCell className="font-medium">
+          {t.nombre || t.titulo || "Sin título"}
+        </TableCell>
+        <TableCell>
+          <Badge variant="secondary">
+            {t.etapa || t.tipo || "General"}
+          </Badge>
+        </TableCell>
+        {/* QUITAMOS EL Badge de estado */}
+        <TableCell>
+          {t.created_at ? new Date(t.created_at).toLocaleDateString('es-MX') : t.fecha || "—"}
+        </TableCell>
+        <TableCell>
+          {t.archivo ? (
+            <a href={t.archivo} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+              Descargar
+            </a>
+          ) : (
+            <span className="text-gray-500">No adjunto</span>
+          )}
+        </TableCell>
+
+        {/* ACCIONES */}
+        <TableCell className="text-center">
+          <div className="flex items-center justify-center gap-2">
+            {esEditable && (
+              <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-blue-400 hover:bg-blue-50 text-blue-700"
+                  onClick={() => handleEditarTramite(t)}
+                >
+                  Editar
+                </Button>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => handleCancelarTramite(t.id)}
+                >
+                  Cancelar
+                </Button>
+              </>
+            )}
+            {!esEditable && (
+              <Button
+                size="sm"
+                variant="default"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                onClick={() => handleVerResultado(t)}
+              >
+                Ver resultado
+              </Button>
+            )}
+          </div>
+        </TableCell>
+      </TableRow>
+    );
+  })}
+</TableBody>
+
+
           </Table>
         </div>
       )}
@@ -492,6 +586,7 @@ const renderMisTramites = () => (
           isOpen={isSidebarOpen}
           onClose={() => setIsSidebarOpen(false)}
         />
+        
         <main className={cn(
           "flex-1 transition-all duration-300 p-2 sm:p-4 lg:p-6 overflow-y-auto w-full",
           isSidebarOpen ? "lg:ml-0 ml-0" : "ml-0"
@@ -501,7 +596,180 @@ const renderMisTramites = () => (
           </div>
         </main>
       </div>
+      {/* BOTÓN DE AYUDA FLOTANTE EN ESQUINA INFERIOR DERECHA (COMO WHATSAPP) */}
+<div className="fixed bottom-6 right-6 z-50">
+  <Dialog>
+    <DialogTrigger asChild>
+      <Button
+        size="icon"
+        className="rounded-full shadow-2xl w-16 h-16 bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-700 hover:to-emerald-700 transition-all hover:scale-110"
+      >
+        <HelpCircle className="h-9 w-9 text-white" />
+      </Button>
+    </DialogTrigger>
+
+    <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+      <DialogHeader>
+        <DialogTitle className="text-2xl font-bold flex items-center gap-3">
+          Guía para Estudiantes
+        </DialogTitle>
+        <DialogDescription className="text-lg text-gray-600">
+          Todo lo que puedes hacer en Dart
+        </DialogDescription>
+      </DialogHeader>
+
+      <div className="mt-6 space-y-5 text-left">
+        <div className="flex items-start gap-4 p-4 bg-blue-50 rounded-xl">
+          <FileText className="h-7 w-7 text-blue-600 mt-1 flex-shrink-0" />
+          <div>
+            <strong className="text-lg">Crear Trámite</strong>
+            <p className="text-gray-700 mt-1">Elige tu trámite del carrusel y llena el formulario. Se genera tu folio y QR automáticamente.</p>
+          </div>
+        </div>
+
+        <div className="flex items-start gap-4 p-4 bg-green-50 rounded-xl">
+          <Package className="h-7 w-7 text-green-600 mt-1 flex-shrink-0" />
+          <div>
+            <strong className="text-lg">Mis Trámites</strong>
+            <p className="text-gray-700 mt-1">Revisa el estado, descarga archivos y ve tu código QR.</p>
+          </div>
+        </div>
+
+        <div className="flex items-start gap-4 p-4 bg-emerald-50 rounded-xl">
+          <CheckCircle2 className="h-7 w-7 text-emerald-600 mt-1 flex-shrink-0" />
+          <div>
+            <strong className="text-lg">Confirmación de Entrega</strong>
+            <p className="text-gray-700 mt-1">Cuando el jefe confirme la entrega, tu trámite quedará como "Entregado".</p>
+          </div>
+        </div>
+      </div>
+    </DialogContent>
+  </Dialog>
+</div>
+
+
+{/* VENTANA BONITA PARA CANCELAR TRÁMITE */}
+<Dialog open={tramiteACancelar !== null} onOpenChange={() => setTramiteACancelar(null)}>
+  <DialogContent className="sm:max-w-md">
+    <DialogHeader>
+      <DialogTitle className="text-xl flex items-center gap-2">
+        Cancelar Trámite
+      </DialogTitle>
+      <DialogDescription className="text-base">
+        ¿Estás seguro de que quieres cancelar este trámite?<br />
+        <strong className="text-red-600">Ya no aparecerá en tu lista.</strong>
+      </DialogDescription>
+    </DialogHeader>
+    <div className="flex justify-end gap-4 mt-6">
+      <Button variant="outline" onClick={() => setTramiteACancelar(null)}>
+        No, volver
+      </Button>
+      <Button variant="destructive" onClick={confirmarCancelacion}>
+        Sí, cancelar trámite
+      </Button>
+    </div>
+  </DialogContent>
+</Dialog>
+
+{/* VENTANA PARA VER RESULTADO DEL TRÁMITE */}
+<Dialog open={tramiteSeleccionado !== null} onOpenChange={() => setTramiteSeleccionado(null)}>
+<DialogContent className="max-w-2xl">
+  <DialogHeader>
+    <DialogTitle className="text-2xl font-bold">Resultado del Trámite</DialogTitle>
+    <DialogDescription className="sr-only">Detalles del resultado de tu trámite</DialogDescription>
+  </DialogHeader>
+
+  {tramiteSeleccionado && (
+    <div className="space-y-6 mt-6">
+
+      {/* MENSAJE VERDE PARA ENTREGADO */}
+      {(tramiteSeleccionado.status === "Entregado" || tramiteSeleccionado.estado === "Entregado") && (
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500 p-6 rounded-r-xl">
+          <p className="text-2xl font-bold text-green-800 mb-3">
+            ¡Tu documento ya fue entregado!
+          </p>
+          <p className="text-green-700 text-lg">
+            Puedes pasar a recogerlo en la ventanilla de <strong>Servicios Escolares</strong>
+          </p>
+          <p className="font-mono text-xl text-green-900 mt-4 bg-white px-5 py-3 rounded-lg inline-block">
+            Folio: {tramiteSeleccionado.folio}
+          </p>
+        </div>
+      )}
+
+      {/* MENSAJE AZUL PARA APROBADO */}
+      {(tramiteSeleccionado.status === "Aprobado" || tramiteSeleccionado.estado === "Aprobado") && (
+        <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-l-4 border-blue-500 p-6 rounded-r-xl">
+          <p className="text-2xl font-bold text-blue-800 mb-3">
+            ¡Tu trámite fue aprobado!
+          </p>
+          <p className="text-blue-700 text-lg">
+            El jefe lo revisó y está en proceso de entrega. Te avisaremos cuando esté listo.
+          </p>
+        </div>
+      )}
+
+      {/* MENSAJE ROJO PARA RECHAZADO */}
+      {(tramiteSeleccionado.status === "Rechazado" || tramiteSeleccionado.estado === "Rechazado") && (
+        <div className="bg-gradient-to-r from-red-50 to-pink-50 border-l-4 border-red-500 p-6 rounded-r-xl">
+          <p className="text-2xl font-bold text-red-800 mb-3">
+            Tu trámite fue rechazado
+          </p>
+          <p className="text-red-700 text-lg">
+            Motivo: <strong>{tramiteSeleccionado.motivo_rechazo || "No especificado por el jefe"}</strong>
+          </p>
+          <p className="text-red-600 mt-3">
+            Puedes crear un nuevo trámite corregido.
+          </p>
+        </div>
+      )}
+
+      {/* DETALLES DEL TRÁMITE */}
+      <div className="bg-gray-50 p-6 rounded-xl">
+        <h3 className="font-bold text-xl text-gray-800 mb-4">
+          {tramiteSeleccionado.titulo || tramiteSeleccionado.nombre}
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <span className="font-medium text-gray-600">Folio:</span>
+            <p className="font-mono text-lg">{tramiteSeleccionado.folio}</p>
+          </div>
+          <div>
+            <span className="font-medium text-gray-600">Estado:</span>
+            <Badge className="ml-2" variant="default">
+              {tramiteSeleccionado.status || tramiteSeleccionado.estado}
+            </Badge>
+          </div>
+        </div>
+      </div>
+
+      {/* ARCHIVO Y TEXTO */}
+      {tramiteSeleccionado.contenido && (
+        <div>
+          <h4 className="font-semibold text-gray-700 mb-2">Tu mensaje:</h4>
+          <p className="bg-white p-4 rounded-lg border">{tramiteSeleccionado.contenido}</p>
+        </div>
+      )}
+
+      {tramiteSeleccionado.archivo && (
+        <div>
+          <h4 className="font-semibold text-gray-700 mb-2">Archivo adjunto:</h4>
+          <a href={tramiteSeleccionado.archivo} target="_blank" rel="noopener noreferrer"
+             className="text-blue-600 hover:underline font-medium">
+            Descargar archivo
+          </a>
+        </div>
+      )}
+    </div>
+  )}
+
+  <DialogFooter>
+    <Button onClick={() => setTramiteSeleccionado(null)}>Cerrar</Button>
+  </DialogFooter>
+</DialogContent>
+</Dialog>
       <DashboardFooter />
     </div>
+    
   );
 }

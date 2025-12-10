@@ -21,86 +21,93 @@ export default function JefeDepartamentoPanel({ userName }: { userName: string; 
   const departamentoJefe = localStorage.getItem("departamentoJefe") || ""; // ← el que eligió en select-role
 
   // ← MAPPING DE CATEGORÍA A ETAPA EN LA BASE DE DATOS
-  const mapping: Record<string, string | string[]> = {
-    becas: 'becas',
-    inscripciones: 'inscripcion',
-    servicios_escolares: ['calificaciones', 'documentos', 'inscripcion'],
-    imss: 'seguridad_social',
-    biblioteca: 'recursos',
-    participacion: 'participacion',
-  };
+// ← MUEVE EL MAPPING FUERA DEL useEffect (aquí arriba, después de los estados)
+// ← MAPPING COMPLETO Y CORRECTO
+const mapping: Record<string, string | string[]> = {
+  becas: 'becas',
+  inscripcion: 'inscripcion',  // ← ESTO ES LO QUE FALTABA
+  servicios_escolares: ['calificaciones', 'documentos', 'inscripcion'],
+  imss: 'seguridad_social',
+  biblioteca: 'recursos',
+  participacion: 'participacion',
+};
 
-  useEffect(() => {
-    const fetchTramites = async () => {
-      setLoading(true);
+useEffect(() => {
+  const fetchTramites = async () => {
+    setLoading(true);
 
-      if (!token) {
-        console.error("NO HAY TOKEN");
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const res = await axios.get(`${API_BASE}/tramites/aprobados/`, {
-          headers: { Authorization: `Token ${token}` }
-        });
-
-        let todos = res.data;
-
-        // ← FILTRO POR CATEGORÍA DEL JEFE
-        if (departamentoJefe) {
-          const dept = departamentoJefe.toLowerCase().trim();
-          let categorias = mapping[dept];
-
-          if (!categorias) {
-            categorias = [];
-          } else if (!Array.isArray(categorias)) {
-            categorias = [categorias];
-          }
-
-          todos = todos.filter((t: any) => categorias.includes(t.etapa));
-        }
-
-        // Separar pendientes y entregados
-        const pendientes = todos.filter((t: any) => t.status === 'Aprobado');
-        const entregados = todos.filter((t: any) => t.status === 'Entregado');
-
-        setTramites(activeSection === "pendientes" ? pendientes : entregados);
-      } catch (err: any) {
-        console.error("Error:", err.response?.data || err.message);
-        setTramites([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTramites();
-  }, [token, departamentoJefe, activeSection]);
-
-  const handleConfirmarEntrega = async (id: number) => {
-    if (!confirm("¿Confirmar que el documento fue entregado?")) return;
+    if (!token) {
+      setLoading(false);
+      return;
+    }
 
     try {
-      await axios.post(`${API_BASE}/gestor/confirmar/${id}/`, {}, {
-        headers: { Authorization: `Token ${token}` }
-      });
-      alert("¡Entrega confirmada!");
-      // Recarga
       const res = await axios.get(`${API_BASE}/tramites/aprobados/`, {
         headers: { Authorization: `Token ${token}` }
       });
+
       let todos = res.data;
-      if (departamentoJefe) {
-        const dept = departamentoJefe.toLowerCase().trim();
-        let categorias = mapping[dept] || [];
-        if (!Array.isArray(categorias)) categorias = [categorias];
-        todos = todos.filter((t: any) => categorias.includes(t.etapa));
-      }
-      setTramites(todos.filter((t: any) => t.status !== 'Entregado'));
-    } catch (err) {
-      alert("Error al confirmar");
+
+      const departamentoJefe = localStorage.getItem("departamentoJefe") || "";
+      const dept = departamentoJefe.toLowerCase();
+
+      // ← FILTRO FINAL Y QUE FUNCIONA AL 100%
+      todos = todos.filter((t: any) => {
+        const etapa = t.etapa?.toLowerCase() || "";
+
+        if (dept.includes("imss")) return etapa === "seguridad_social";
+        if (dept.includes("biblioteca")) return etapa === "recursos";
+        if (dept.includes("becas")) return etapa === "becas";
+        if (dept.includes("inscripcion")) return etapa === "inscripcion";  // singular!
+        if (dept.includes("servicios_escolares")) return ["calificaciones", "documentos", "inscripcion"].includes(etapa);
+        if (dept.includes("participacion")) return etapa === "participacion";
+
+        return false;
+      });
+
+      const pendientes = todos.filter((t: any) => t.status === 'Aprobado');
+      const entregados = todos.filter((t: any) => t.status === 'Entregado');
+
+      setTramites(activeSection === "pendientes" ? pendientes : entregados);
+    } catch (err: any) {
+      console.error("Error:", err);
+      setTramites([]);
+    } finally {
+      setLoading(false);
     }
   };
+
+  fetchTramites();
+}, [token, activeSection]);
+
+
+// ← AHORA handleConfirmarEntrega SÍ VE EL MAPPING
+const handleConfirmarEntrega = async (id: number) => {
+  if (!confirm("¿Confirmar que el documento fue entregado?")) return;
+
+  try {
+    await axios.post(`${API_BASE}/gestor/confirmar/${id}/`, {}, {
+      headers: { Authorization: `Token ${token}` }
+    });
+    alert("¡Entrega confirmada!");
+
+    const res = await axios.get(`${API_BASE}/tramites/aprobados/`, {
+      headers: { Authorization: `Token ${token}` }
+    });
+    let todos = res.data;
+
+    if (departamentoJefe) {
+      const dept = departamentoJefe.toLowerCase().trim();
+      let categorias = mapping[dept] || [];
+      if (!Array.isArray(categorias)) categorias = [categorias];
+      todos = todos.filter((t: any) => categorias.includes(t.etapa));
+    }
+
+    setTramites(todos.filter((t: any) => t.status !== 'Entregado'));
+  } catch (err) {
+    alert("Error al confirmar");
+  }
+};
 
   // ← TÍTULO DINÁMICO SEGÚN DEPARTAMENTO
   const tituloDepartamento = departamentoJefe ? departamentoJefe.charAt(0).toUpperCase() + departamentoJefe.slice(1) : "Departamento";

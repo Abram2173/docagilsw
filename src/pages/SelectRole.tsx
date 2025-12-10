@@ -19,32 +19,56 @@ export default function SelectRole() {
     { role: "solicitante", title: "Estudiante", desc: "Consulta y trámites", icon: GraduationCap, color: "bg-[#F4A100]" },
   ];
 
-const handleSelect = (role: string) => {
-  localStorage.setItem("role", role);
+  // ← FUNCIÓN QUE SE LLAMA AL HACER CLICK EN UNA TARJETA
+  const handleRoleClick = (role: string) => {
+    if (role !== "gestor") {
+      // ← SI NO ES JEFE, VA DIRECTO AL DASHBOARD
+      localStorage.setItem("role", role);
+      navigate("/dashboard");
+    } else {
+      // ← SI ES JEFE, SOLO MUESTRA EL SELECT DE DEPARTAMENTO
+      setSelectedRole(role);
+    }
+  };
 
-  // ← SOLO LOS JEFES DE DEPARTAMENTO ELIGEN SU CATEGORÍA
-  if (role === "gestor") {
-    setSelectedRole(role);  // Muestra el Select de departamento
-    // NO navega todavía, espera a que elija departamento y dé "Continuar"
-  } else {
-    // ← TODOS LOS DEMÁS ROLES VAN DIRECTO AL DASHBOARD
+  // ← BOTÓN CONTINUAR (SOLO PARA JEFES)
+  const handleContinuar = () => {
+    if (selectedRole === "gestor" && !departamentoJefe) {
+      alert("Por favor elige tu departamento");
+      return;
+    }
+
+    let finalRole = selectedRole;
+
+    if (selectedRole === "gestor") {
+      switch (departamentoJefe.toLowerCase()) {
+        case "imss":
+          finalRole = "gestor_imss";
+          break;
+        case "inscripciones":
+          finalRole = "gestor_inscripciones";
+          break;
+        case "servicios_escolares":
+          finalRole = "gestor_servicios";
+          break;
+        case "biblioteca":
+          finalRole = "gestor_biblioteca";
+          break;
+        case "becas":
+          finalRole = "gestor_becas";
+          break;
+        default:
+          finalRole = "gestor";
+      }
+    }
+
+    localStorage.setItem("role", finalRole);
+    if (selectedRole === "gestor") {
+      localStorage.setItem("departamentoJefe", departamentoJefe);
+    }
+
     navigate("/dashboard");
-  }
-};
-
-// ← BOTÓN CONTINUAR SOLO PARA JEFES
-const handleContinuar = () => {
-  if (selectedRole === "gestor" && !departamentoJefe) {
-    alert("Por favor elige tu departamento");
-    return;
-  }
-
-  if (selectedRole === "gestor") {
-    localStorage.setItem("departamentoJefe", departamentoJefe);
-  }
-
-  navigate("/dashboard");
-};
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-sky-50 flex flex-col items-center justify-center p-6">
@@ -68,56 +92,55 @@ const handleContinuar = () => {
       </div>
 
       {/* GRID DE ROLES */}
-{/* GRID DE ROLES */}
-<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-5xl w-full">
-  {roles.map((r) => {
-    const Icon = r.icon;
-    return (
-      <Card
-        key={r.role}
-        className={`shadow-2xl hover:shadow-3xl transition-all cursor-pointer hover:scale-105 ${r.color} text-white ${selectedRole === r.role ? "ring-4 ring-white ring-offset-4 ring-offset-gray-800" : ""}`}
-        onClick={() => handleSelect(r.role)}  // ← Llama a handleSelect con el rol
-      >
-        <div className="p-8 text-center">
-          <Icon className="w-16 h-16 mx-auto mb-4" />
-          <h3 className="text-xl font-bold mb-2">{r.title}</h3>
-          <p className="text-sm opacity-90">{r.desc}</p>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-5xl w-full">
+        {roles.map((r) => {
+          const Icon = r.icon;
+          return (
+            <Card
+              key={r.role}
+              className={`shadow-2xl hover:shadow-3xl transition-all cursor-pointer hover:scale-105 ${r.color} text-white ${selectedRole === r.role ? "ring-4 ring-white ring-offset-4 ring-offset-gray-800" : ""}`}
+              onClick={() => handleRoleClick(r.role)}  // ← AHORA SÍ EXISTE
+            >
+              <div className="p-8 text-center">
+                <Icon className="w-16 h-16 mx-auto mb-4" />
+                <h3 className="text-xl font-bold mb-2">{r.title}</h3>
+                <p className="text-sm opacity-90">{r.desc}</p>
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* SELECT + BOTÓN SOLO PARA JEFE */}
+      {selectedRole === "gestor" && (
+        <div className="mt-10 w-full max-w-md space-y-6">
+          <label className="block text-lg font-medium text-gray-700 mb-3 text-center">
+            Selecciona tu departamento
+          </label>
+          <Select value={departamentoJefe} onValueChange={setDepartamentoJefe}>
+            <SelectTrigger className="h-14 text-lg">
+              <SelectValue placeholder="Elige tu departamento" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="becas">Becas</SelectItem>
+              <SelectItem value="inscripcion">Inscripciones</SelectItem>
+              <SelectItem value="servicios_escolares">Servicios Escolares</SelectItem>
+              <SelectItem value="imss">IMSS</SelectItem>
+              <SelectItem value="biblioteca">Biblioteca</SelectItem>
+              <SelectItem value="participacion">Participación Estudiantil</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Button
+            size="lg"
+            onClick={handleContinuar}
+            disabled={!departamentoJefe}
+            className="w-full px-12 py-6 text-xl font-bold bg-gradient-to-r from-[#0EA5E9] to-[#10B981] hover:from-[#0D94D1] hover:to-[#0FA472]"
+          >
+            Continuar
+          </Button>
         </div>
-      </Card>
-    );
-  })}
-</div>
-
-{/* SELECT DE DEPARTAMENTO Y BOTÓN CONTINUAR (SOLO PARA JEFE) */}
-{selectedRole === "gestor" && (
-  <div className="mt-10 w-full max-w-md space-y-6">
-    <label className="block text-lg font-medium text-gray-700 mb-3 text-center">
-      Selecciona tu departamento
-    </label>
-    <Select value={departamentoJefe} onValueChange={setDepartamentoJefe}>
-      <SelectTrigger className="h-14 text-lg">
-        <SelectValue placeholder="Elige tu departamento" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="becas">Becas</SelectItem>
-        <SelectItem value="inscripciones">Inscripciones</SelectItem>
-        <SelectItem value="servicios_escolares">Servicios Escolares</SelectItem>
-        <SelectItem value="imss">IMSS</SelectItem>
-        <SelectItem value="biblioteca">Biblioteca</SelectItem>
-        <SelectItem value="participacion">Participación Estudiantil</SelectItem>
-      </SelectContent>
-    </Select>
-
-    <Button
-      size="lg"
-      onClick={handleContinuar}
-      disabled={!departamentoJefe}
-      className="w-full px-12 py-6 text-xl font-bold bg-gradient-to-r from-[#0EA5E9] to-[#10B981] hover:from-[#0D94D1] hover:to-[#0FA472]"
-    >
-      Continuar
-    </Button>
-  </div>
-)}
+      )}
 
       {/* ADMIN OCULTO */}
       <div className="mt-10">

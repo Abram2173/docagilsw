@@ -19,68 +19,93 @@ export default function JefeServiciosEscolaresPanel({ userName }: { userName: st
 
   const token = localStorage.getItem("token");
 
-  useEffect(() => {
-    const fetchTramites = async () => {
-      setLoading(true);
+useEffect(() => {
+  const fetchTramites = async () => {
+    setLoading(true);
 
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const res = await axios.get(`${API_BASE}/tramites/aprobados/`, {
-          headers: { Authorization: `Token ${token}` }
-        });
-
-        let todos = res.data;
-
-        // ← SOLO TRÁMITES DE SERVICIOS ESCOLARES
-        todos = todos.filter((t: any) => 
-          t.etapa === 'calificaciones' || 
-          t.etapa === 'documentos' || 
-          t.etapa === 'inscripcion'
-        );
-
-        // Separar pendientes y entregados
-        const pendientes = todos.filter((t: any) => t.status !== 'Entregado');
-        const entregados = todos.filter((t: any) => t.status === 'Entregado');
-
-        setTramites(activeSection === "pendientes" ? pendientes : entregados);
-      } catch (err: any) {
-        console.error("Error:", err);
-        setTramites([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTramites();
-  }, [token, activeSection]);
-
-  const handleConfirmarEntrega = async (id: number) => {
-    if (!confirm("¿Confirmar que el documento fue entregado?")) return;
+    if (!token) {
+      setLoading(false);
+      return;
+    }
 
     try {
-      await axios.post(`${API_BASE}/gestor/confirmar/${id}/`, {}, {
-        headers: { Authorization: `Token ${token}` }
-      });
-      alert("¡Entrega confirmada!");
-      // Recarga
       const res = await axios.get(`${API_BASE}/tramites/aprobados/`, {
         headers: { Authorization: `Token ${token}` }
       });
+
+      console.log("TRÁMITES QUE LLEGAN:", res.data);
+
       let todos = res.data;
-      todos = todos.filter((t: any) => 
-        t.etapa === 'calificaciones' || 
-        t.etapa === 'documentos' || 
-        t.etapa === 'inscripcion'
-      );
-      setTramites(todos.filter((t: any) => t.status !== 'Entregado'));
-    } catch (err) {
-      alert("Error al confirmar");
+
+      // ← DEBUG: MUESTRA CADA TRÁMITE ANTES DEL FILTRO
+      todos.forEach((t: any) => {
+        console.log("Trámite:", t.titulo, "Etapa:", t.etapa, "Status:", t.status);
+      });
+
+// ← FILTRO QUE FUNCIONA CON O SIN ACENTO
+todos = todos.filter((t: any) => {
+  const etapa = t.etapa
+    ?.toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, ""); // ← QUITA ACENTOS
+
+  return (
+    etapa.includes("calificacion") ||
+    etapa.includes("documento")        ||
+    etapa.includes("inscripcion")      ||  // ahora sí agarra "inscripción"
+    etapa.includes("calendario")
+  );
+});
+
+      const pendientes = todos.filter((t: any) => t.status !== 'Entregado');
+      const entregados = todos.filter((t: any) => t.status === 'Entregado');
+
+      setTramites(activeSection === "pendientes" ? pendientes : entregados);
+    } catch (err: any) {
+      console.error("Error:", err);
+      setTramites([]);
+    } finally {
+      setLoading(false);
     }
   };
+
+  fetchTramites();
+}, [token, activeSection]);
+
+
+const handleConfirmarEntrega = async (id: number) => {
+  if (!confirm("¿Confirmar que el documento fue entregado?")) return;
+
+  try {
+    await axios.post(`${API_BASE}/gestor/confirmar/${id}/`, {}, {
+      headers: { Authorization: `Token ${token}` }
+    });
+    alert("¡Entrega confirmada!");
+
+    // ← USA LA MISMA RUTA QUE EN useEffect
+    const res = await axios.get(`${API_BASE}/tramites/aprobados/`, {
+      headers: { Authorization: `Token ${token}` }
+    });
+
+    let todos = res.data;
+
+    // ← USA EL MISMO FILTRO FLEXIBLE QUE EN useEffect
+    todos = todos.filter((t: any) => {
+      const etapa = t.etapa?.toLowerCase() || "";
+      return (
+        etapa.includes("calificacion") ||
+        etapa.includes("documento") ||
+        etapa.includes("inscripcion")
+      );
+    });
+
+    setTramites(todos.filter((t: any) => t.status !== 'Entregado'));
+  } catch (err) {
+    alert("Error al confirmar");
+  }
+};
+
+
 
   const sidebarItems = [
     {

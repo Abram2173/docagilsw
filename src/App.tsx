@@ -18,7 +18,6 @@ import CoordinadorPanel from './components/roles/CoordinadorPanel';
 // ← IMPORTS DE LOS PANELES DE JEFES
 import JefeIMSSPanel from './components/roles/jefes/JefeIMSSPanel';
 import JefeBecasPanel from './components/roles/jefes/JefeBecasPanel';
-import JefeInscripcionesPanel from './components/roles/jefes/JefeInscripcionesPanel';
 import JefeServiciosEscolaresPanel from './components/roles/jefes/JefeServiciosEscolaresPanel';
 import JefeBibliotecaPanel from './components/roles/jefes/JefeBibliotecaPanel';
 
@@ -60,7 +59,7 @@ if (r.includes('coordinador')) return <CoordinadorPanel userName={fullName} role
 // ← JEFES ESPECÍFICOS
 if (r === 'gestor_imss') return <JefeIMSSPanel userName={fullName} role={role} />;
 if (r === 'gestor_becas') return <JefeBecasPanel userName={fullName} role={role} />;
-if (r === 'gestor_inscripciones') return <JefeInscripcionesPanel userName={fullName} role={role} />;
+// if (r === 'gestor_inscripciones') return <JefeInscripcionesPanel userName={fullName} role={role} />;
 if (r === 'gestor_servicios') return <JefeServiciosEscolaresPanel userName={fullName} role={role} />;
 if (r === 'gestor_biblioteca') return <JefeBibliotecaPanel userName={fullName} role={role} />;
 
