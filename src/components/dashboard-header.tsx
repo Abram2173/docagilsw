@@ -9,9 +9,17 @@ interface DashboardHeaderProps {
   userName: string;
   role: string;
   onMenuToggle: () => void;
+  userControl?: string;   // ← NUEVO: número de control
+  userEmail?: string;     // ← NUEVO: correo institucional
 }
 
-export function DashboardHeader({ userName, role, onMenuToggle }: DashboardHeaderProps) {
+export function DashboardHeader({ 
+  userName, 
+  role, 
+  onMenuToggle,
+  userControl = "",
+  userEmail = ""
+}: DashboardHeaderProps) {
   const [notificationCount] = useState(3);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const navigate = useNavigate();
@@ -27,7 +35,7 @@ export function DashboardHeader({ userName, role, onMenuToggle }: DashboardHeade
 
       <div className="relative flex items-center justify-between">
 
-        {/* IZQUIERDA: LOGO DART + MENÚ MÓVIL */}
+        {/* IZQUIERDA: MENÚ + LOGO */}
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
@@ -39,29 +47,22 @@ export function DashboardHeader({ userName, role, onMenuToggle }: DashboardHeade
           </Button>
 
           <div className="flex items-center gap-3">
-        {/* LOGO DART OFICIAL */}
-        <div className="flex items-center gap-3 group">
-
-
-          <div className="flex items-baseline">
-            <span className="text-4xl sm:text-3xl md:text-5xl font-bold text-[#000000]" style={{ fontFamily: "'Libre Baskerville', serif" }}>
-              D
-            </span>
-            <span className="text-2xl sm:text-3xl md:text-3xl font-black text-[#000000] tracking-wider" style={{ fontFamily: "'Norwester', sans-serif", letterSpacing: "0.12em" }}>
-              ART
-            </span>
-          </div>
-
+            <div className="flex items-baseline">
+              <span className="text-4xl sm:text-3xl md:text-5xl font-bold text-[#000000]" style={{ fontFamily: "'Libre Baskerville', serif" }}>
+                D
+              </span>
+              <span className="text-2xl sm:text-3xl md:text-3xl font-black text-[#000000] tracking-wider" style={{ fontFamily: "'Norwester', sans-serif", letterSpacing: "0.12em" }}>
+                ART
+              </span>
+            </div>
             <div className="relative">
-            <Lightbulb className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-[#ffffff] fill-[#0EA5E9] animate-pulse-slow" />
-            <CircleCheck className="w-5 h-5 text-[#ffffff] absolute -top-1 -right-1" />
-            
-          </div>
-        </div>
+              <Lightbulb className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-[#ffffff] fill-[#0EA5E9] animate-pulse-slow" />
+              <CircleCheck className="w-5 h-5 text-[#ffffff] absolute -top-1 -right-1" />
+            </div>
           </div>
         </div>
 
-        {/* DERECHA: USUARIO + NOTIFICACIONES + MENÚ */}
+        {/* DERECHA: USUARIO + INFO */}
         <div className="flex items-center gap-4">
 
           {/* NOTIFICACIONES */}
@@ -76,7 +77,7 @@ export function DashboardHeader({ userName, role, onMenuToggle }: DashboardHeade
             </Button>
           </div>
 
-          {/* AVATAR + MENÚ DESPLEGABLE */}
+          {/* INFO DEL USUARIO */}
           <div className="relative">
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
@@ -84,7 +85,13 @@ export function DashboardHeader({ userName, role, onMenuToggle }: DashboardHeade
             >
               <div className="text-right hidden sm:block">
                 <p className="text-sm font-semibold text-white">Hola, {userName || 'Usuario'}</p>
-                <Badge variant="secondary" className="text-xs bg-white/30 text-white">
+                {userControl && (
+                  <p className="text-xs font-mono text-white/90">{userControl}</p>
+                )}
+                {userEmail && (
+                  <p className="text-xs text-white/80 truncate max-w-48">{userEmail}</p>
+                )}
+                <Badge variant="secondary" className="text-xs bg-white/30 text-white mt-1">
                   {role}
                 </Badge>
               </div>
@@ -95,15 +102,17 @@ export function DashboardHeader({ userName, role, onMenuToggle }: DashboardHeade
 
             {/* MENÚ DESPLEGABLE */}
             {showUserMenu && (
-              <div className="absolute right-0 top-14 z-50 w-64 rounded-xl border border-slate-200 bg-white shadow-2xl overflow-hidden">
-                <div className="px-4 py-3 bg-gradient-to-r from-sky-500 to-emerald-500 text-white">
-                  <p className="font-bold text-lg">{userName || 'Usuario'}</p>
-                  <p className="text-sm opacity-90">{role}</p>
+              <div className="absolute right-0 top-14 z-50 w-72 rounded-xl border border-slate-200 bg-white shadow-2xl overflow-hidden">
+                <div className="px-6 py-4 bg-gradient-to-r from-sky-500 to-emerald-500 text-white">
+                  <p className="font-bold text-xl">{userName}</p>
+                  {userControl && <p className="font-mono text-sm opacity-90">{userControl}</p>}
+                  {userEmail && <p className="text-sm opacity-80 truncate">{userEmail}</p>}
+                  <Badge className="mt-2 text-xs bg-white/30">{role}</Badge>
                 </div>
 
                 <button
                   onClick={() => { setShowUserMenu(false); navigate("/cuenta"); }}
-                  className="flex w-full items-center gap-3 px-4 py-3 text-slate-700 hover:bg-slate-100 transition-colors"
+                  className="flex w-full items-center gap-3 px-6 py-4 text-slate-700 hover:bg-slate-100 transition-colors"
                 >
                   <User className="h-5 w-5" /> Mi Perfil
                 </button>
@@ -112,15 +121,13 @@ export function DashboardHeader({ userName, role, onMenuToggle }: DashboardHeade
 
                 <button
                   onClick={() => { setShowUserMenu(false); handleLogout(); }}
-                  className="flex w-full items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 transition-colors font-medium"
+                  className="flex w-full items-center gap-3 px-6 py-4 text-red-600 hover:bg-red-50 transition-colors font-medium"
                 >
                   <LogOut className="h-5 w-5" /> Cerrar Sesión
                 </button>
               </div>
             )}
           </div>
-
-          {/* BOTÓN SALIR (opcional, si quieres mantenerlo visible) */}
         </div>
       </div>
     </header>

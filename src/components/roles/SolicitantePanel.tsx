@@ -138,6 +138,36 @@ interface Tramite {
     }
   }, [role, navigate]);
 
+
+  const [userData, setUserData] = useState({
+  full_name: "",
+  username: "",
+  email: ""
+});
+
+
+// ← OBTENER DATOS DEL USUARIO AL CARGAR
+useEffect(() => {
+  const fetchUserData = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`${API_BASE}/auth/user/`, {
+        headers: { Authorization: `Token ${token}` }
+      });
+      
+      setUserData({
+        full_name: response.data.full_name || response.data.username,
+        username: response.data.username,
+        email: response.data.email || ""
+      });
+    } catch (err) {
+      console.log("No se pudo cargar datos del usuario");
+    }
+  };
+
+  fetchUserData();
+}, []);
+
 useEffect(() => {
   const fetchData = async () => {
     setLoading(true);
@@ -572,10 +602,12 @@ const renderMisTramites = () => (
 
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-gray-50 via-white to-green-50/20">
-     <DashboardHeader 
-  userName={userName} 
+<DashboardHeader 
+  userName={userData.full_name || userName}
+  userControl={userData.username}      // ← número de control
+  userEmail={userData.email}           // ← correo institucional
   role={role} 
-  onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)}   // ← ESTO ES LA CLAVE
+  onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)}
 />
       <div className="flex flex-1">
         <DashboardSidebar 

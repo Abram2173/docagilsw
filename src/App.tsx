@@ -22,6 +22,7 @@ import JefeServiciosEscolaresPanel from './components/roles/jefes/JefeServiciosE
 import JefeBibliotecaPanel from './components/roles/jefes/JefeBibliotecaPanel';
 
 import { Button } from './components/ui/button';
+import AuthCallback from './pages/AuthCallback';
 
 const useAuth = () => {
   const token = localStorage.getItem('token');
@@ -96,6 +97,7 @@ function App() {
       <Route path="/auth" element={<AuthPage />} />
       <Route path="/select-role" element={<SelectRole />} />
 
+      <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/dashboard" element={<Dashboard />} />
 
       <Route path="*" element={<Dashboard />} />

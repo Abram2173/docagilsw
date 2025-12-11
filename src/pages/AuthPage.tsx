@@ -226,21 +226,38 @@ const handleLoginSubmit = async (e: React.FormEvent) => {
               >
                 <form onSubmit={handleLoginSubmit} className="space-y-6">
                   {errorMsg && <p className="text-red-600 text-center font-medium">{errorMsg}</p>}
-                  <Input type="text" placeholder="Nombre de usuario" value={loginUsername} onChange={e => setLoginUsername(e.target.value)} required disabled={isSubmitting} className="h-14 text-lg" />
-                  <Input type="password" placeholder="Contraseña" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} required disabled={isSubmitting} className="h-14 text-lg" />
-                  <Button
-                    type="submit"
-                    disabled={isSubmitting || !loginUsername.trim() || !loginPassword.trim()}
-                    className={`
-                      w-full h-14 text-lg font-bold rounded-xl transition-all
-                      ${isSubmitting || !loginUsername.trim() || !loginPassword.trim()
-                        ? "bg-gray-400 cursor-not-allowed text-gray-200"
-                        : "bg-gradient-to-r from-[#0EA5E9] to-[#10B981]  text-white"
-                      }
-                    `}
-                  >
-                    {isSubmitting ? "Iniciando sesión..." : "Iniciar Sesión"}
-                  </Button>
+                  
+                  <Input type="text" placeholder="Nombre de usuario" value={loginUsername} onChange={e => setLoginUsername(e.target.value)} required disabled={isSubmitting} className="h-12 sm:h-14 text-base sm:text-lg" />
+                  <Input type="password" placeholder="Contraseña" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} required disabled={isSubmitting} className="h-12 sm:h-14 text-base sm:text-lg" />
+                  
+<Button
+  type="submit"
+  disabled={isSubmitting || !loginUsername.trim() || !loginPassword.trim()}
+  className={`
+    w-full 
+    h-12 sm:h-14               // ← Más pequeño en móvil, grande en escritorio
+    text-base sm:text-lg        // ← Texto legible en todos los tamaños
+    font-bold 
+    rounded-xl 
+    transition-all 
+    duration-300 
+    shadow-lg 
+    hover:shadow-xl
+    ${isSubmitting || !loginUsername.trim() || !loginPassword.trim()
+      ? "bg-gray-400 cursor-not-allowed text-gray-200"
+      : "bg-gradient-to-r from-[#0EA5E9] to-[#10B981] text-white hover:from-[#0284c7] hover:to-[#059669] active:scale-95"
+    }
+  `}
+>
+  {isSubmitting ? (
+    <span className="flex items-center justify-center gap-3">
+      <div className="w-5 h-5 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
+      Iniciando sesión...
+    </span>
+  ) : (
+    "Iniciar Sesión"
+  )}
+</Button>
                   <div className="text-center space-y-3 pt-2">
                     <a href="/recuperar" className="text-sm font-medium text-sky-600 hover:underline block">¿Olvidaste tu contraseña?</a>
                     <p className="text-sm text-slate-600">
@@ -250,9 +267,52 @@ const handleLoginSubmit = async (e: React.FormEvent) => {
                       </button>
                     </p>
                   </div>
+
+{/* BOTÓN OFICIAL MICROSOFT — LA FRASE PERFECTA */}
+<div className="mt-8 sm:mt-10">
+  <div className="relative">
+    <div className="absolute inset-0 flex items-center">
+      <div className="w-full border-t border-gray-300"></div>
+    </div>
+    <div className="relative flex justify-center text-sm">
+      <span className="px-4 bg-white text-gray-500 font-medium">O continúa con</span>
+    </div>
+  </div>
+
+  <div className="mt-8">
+<Button
+  onClick={() => {
+    const clientId = import.meta.env.VITE_AZURE_CLIENT_ID;
+    const redirectUri = encodeURIComponent(import.meta.env.VITE_AZURE_REDIRECT_URI || "http://localhost:5173/auth/callback");
+
+    // ← ESTA ES LA ÚNICA LÍNEA HACE QUE FUNCIONE CON CUALQUIER @tecn.mx
+    window.location.href = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?` +
+      `client_id=${clientId}` +
+      `&response_type=code` +
+      `&redirect_uri=${redirectUri}` +
+      `&scope=openid+profile+email` +
+      `&response_mode=query` +
+      `&state=12345` +
+      `&prompt=consent`; // ← ESTO ES LO QUE FALTABA
+  }}
+  className="w-full h-16 bg-white border-2 border-gray-300 hover:border-gray-400 rounded-2xl shadow-xl hover:shadow-2xl transition-all group flex items-center justify-center gap-4"
+>
+  <svg className="w-10 h-10" viewBox="0 0 23 23">
+    <path fill="#f25022" d="M0 0h11v11H0z"/>
+    <path fill="#7fba00" d="M12 0h11v11H12z"/>
+    <path fill="#00a4ef" d="M0 12h11v11H0z"/>
+    <path fill="#ffb900" d="M12 12h11v11H12z"/>
+  </svg>
+  <span className="text-lg font-semibold text-gray-900">
+    Iniciar sesión con Microsoft
+  </span>
+</Button>
+  </div>
+</div>
                 </form>
               </motion.div>
             ) : (
+
               <motion.div
                 key="register"
                 initial={{ x: 300, opacity: 0 }}
@@ -263,144 +323,144 @@ const handleLoginSubmit = async (e: React.FormEvent) => {
                 <form onSubmit={handleRegisterSubmit} className="space-y-5">
                   {errorMsg && <p className="text-red-600 text-center font-medium">{errorMsg}</p>}
 
-{currentStep === 1 && (
-  <>
-    <Input 
-      placeholder="Nombre Completo" 
-      value={fullName} 
-      onChange={e => setFullName(e.target.value)} 
-      required 
-      className="h-12" 
-    />
-    <div>
-      <Input 
-        type="email" 
-        placeholder="Correo institucional" 
-        value={registerEmail} 
-        onChange={handleRegisterEmailChange} 
-        required 
-        className="h-12" 
-      />
-      {emailError && <p className="text-sm text-red-600 mt-1">{emailError}</p>}
-    </div>
-    <Input 
-      placeholder="Teléfono" 
-      value={phone} 
-      onChange={e => setPhone(e.target.value)} 
-      className="h-12" 
-    />
+                {currentStep === 1 && (
+                  <>
+                    <Input 
+                      placeholder="Nombre Completo" 
+                      value={fullName} 
+                      onChange={e => setFullName(e.target.value)} 
+                      required 
+                      className="h-12" 
+                    />
+                    <div>
+                      <Input 
+                        type="email" 
+                        placeholder="Correo institucional" 
+                        value={registerEmail} 
+                        onChange={handleRegisterEmailChange} 
+                        required 
+                        className="h-12" 
+                      />
+                      {emailError && <p className="text-sm text-red-600 mt-1">{emailError}</p>}
+                    </div>
+                    <Input 
+                      placeholder="Teléfono" 
+                      value={phone} 
+                      onChange={e => setPhone(e.target.value)} 
+                      className="h-12" 
+                    />
 
-    {/* ← PRIMERO ELIGE EL ROL */}
-    <Select value={role} onValueChange={setRole} required>
-      <SelectTrigger className="h-12">
-        <SelectValue placeholder="Rol que solicitas" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="solicitante">Usuario Final (Estudiante / Personal)</SelectItem>
-        <SelectItem value="revisor">Revisor / Aprobador</SelectItem>
-        <SelectItem value="gestor">Gestor Documental</SelectItem>
-      </SelectContent>
-    </Select>
+                    {/* ← PRIMERO ELIGE EL ROL */}
+                    <Select value={role} onValueChange={setRole} required>
+                      <SelectTrigger className="h-12">
+                        <SelectValue placeholder="Rol que solicitas" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="solicitante">Usuario Final (Estudiante / Personal)</SelectItem>
+                        <SelectItem value="revisor">Revisor / Aprobador</SelectItem>
+                        <SelectItem value="gestor">Gestor Documental</SelectItem>
+                      </SelectContent>
+                    </Select>
 
-    <Button
-      type="button"
-      onClick={nextStep}
-      disabled={
-        !fullName.trim() ||
-        !registerEmail.trim() ||
-        emailError !== "" ||
-        !role
-      }
-      className="w-full h-12 text-lg font-bold rounded-xl transition-all duration-200
-        disabled:bg-gray-400 disabled:cursor-not-allowed disabled:text-gray-200
-        bg-gradient-to-r from-sky-600 to-emerald-600 hover:from-sky-700 hover:to-emerald-700 text-white shadow-lg"
-    >
-      Siguiente
-    </Button>
-  </>
-)}
+                    <Button
+                      type="button"
+                      onClick={nextStep}
+                      disabled={
+                        !fullName.trim() ||
+                        !registerEmail.trim() ||
+                        emailError !== "" ||
+                        !role
+                      }
+                      className="w-full h-12 text-lg font-bold rounded-xl transition-all duration-200
+                        disabled:bg-gray-400 disabled:cursor-not-allowed disabled:text-gray-200
+                        bg-gradient-to-r from-sky-600 to-emerald-600 hover:from-sky-700 hover:to-emerald-700 text-white shadow-lg"
+                    >
+                      Siguiente
+                    </Button>
+                  </>
+                )}
 
-{currentStep === 2 && (
-  <>
-    {/* ← SI ES JEFE: SELECT DE CATEGORÍAS */}
-    {role === "gestor" && (
-      <div className="mb-6">
-        <label className="text-sm font-medium text-gray-700 mb-2 block">
-          Selecciona tu departamento
-        </label>
-        <Select value={departamentoJefe} onValueChange={setDepartamentoJefe} required>
-          <SelectTrigger className="h-12">
-            <SelectValue placeholder="Elige tu departamento" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="becas">Becas</SelectItem>
-            <SelectItem value="inscripciones">Inscripciones</SelectItem>
-            <SelectItem value="servicios_escolares">Servicios Escolares</SelectItem>
-            <SelectItem value="imss">IMSS</SelectItem>
-            <SelectItem value="biblioteca">Biblioteca</SelectItem>
-            <SelectItem value="participacion">Participación Estudiantil</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-    )}
+                {currentStep === 2 && (
+                  <>
+                    {/* ← SI ES JEFE: SELECT DE CATEGORÍAS */}
+                    {role === "gestor" && (
+                      <div className="mb-6">
+                        <label className="text-sm font-medium text-gray-700 mb-2 block">
+                          Selecciona tu departamento
+                        </label>
+                        <Select value={departamentoJefe} onValueChange={setDepartamentoJefe} required>
+                          <SelectTrigger className="h-12">
+                            <SelectValue placeholder="Elige tu departamento" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="becas">Becas</SelectItem>
+                            <SelectItem value="inscripciones">Inscripciones</SelectItem>
+                            <SelectItem value="servicios_escolares">Servicios Escolares</SelectItem>
+                            <SelectItem value="imss">IMSS</SelectItem>
+                            <SelectItem value="biblioteca">Biblioteca</SelectItem>
+                            <SelectItem value="participacion">Participación Estudiantil</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
 
-    {/* ← SI ES OTRO ROL: INPUT NORMAL DE DEPARTAMENTO */}
-    {role !== "gestor" && (
-      <Input 
-        placeholder="Departamento" 
-        value={department} 
-        onChange={e => setDepartment(e.target.value)} 
-        required 
-        className="h-12" 
-      />
-    )}
+                    {/* ← SI ES OTRO ROL: INPUT NORMAL DE DEPARTAMENTO */}
+                    {role !== "gestor" && (
+                      <Input 
+                        placeholder="Departamento" 
+                        value={department} 
+                        onChange={e => setDepartment(e.target.value)} 
+                        required 
+                        className="h-12" 
+                      />
+                    )}
 
-    <Input 
-      type="password" 
-      placeholder="Contraseña" 
-      value={password} 
-      onChange={e => setPassword(e.target.value)} 
-      required 
-      className="h-12" 
-    />
-    <div>
-      <Input 
-        type="password" 
-        placeholder="Confirmar Contraseña" 
-        value={confirmPassword} 
-        onChange={handleConfirmPasswordChange} 
-        required 
-        className="h-12" 
-      />
-      {passwordError && <p className="text-sm text-red-600 mt-1">{passwordError}</p>}
-    </div>
+                    <Input 
+                      type="password" 
+                      placeholder="Contraseña" 
+                      value={password} 
+                      onChange={e => setPassword(e.target.value)} 
+                      required 
+                      className="h-12" 
+                    />
+                    <div>
+                      <Input 
+                        type="password" 
+                        placeholder="Confirmar Contraseña" 
+                        value={confirmPassword} 
+                        onChange={handleConfirmPasswordChange} 
+                        required 
+                        className="h-12" 
+                      />
+                      {passwordError && <p className="text-sm text-red-600 mt-1">{passwordError}</p>}
+                    </div>
 
-    <div className="flex items-center space-x-2">
-      <Checkbox id="terms" checked={acceptTerms} onCheckedChange={checked => setAcceptTerms(checked as boolean)} />
-      <label htmlFor="terms" className="text-sm text-slate-700 cursor-pointer">
-        Acepto los términos y condiciones
-      </label>
-    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="terms" checked={acceptTerms} onCheckedChange={checked => setAcceptTerms(checked as boolean)} />
+                      <label htmlFor="terms" className="text-sm text-slate-700 cursor-pointer">
+                        Acepto los términos y condiciones
+                      </label>
+                    </div>
 
-    <div className="flex gap-4">
-      <Button type="button" variant="outline" onClick={prevStep} className="flex-1 h-12">
-        Atrás
-      </Button>
-      <Button 
-        type="submit" 
-        disabled={
-          !acceptTerms || 
-          isSubmitting || 
-          (role === "gestor" && !departamentoJefe) || 
-          (role !== "gestor" && !department.trim())
-        } 
-        className="flex-1 h-12 text-lg font-bold rounded-xl"
-      >
-        {isSubmitting ? "Enviando..." : "Enviar Solicitud"}
-      </Button>
-    </div>
-  </>
-)}
+                    <div className="flex gap-4">
+                      <Button type="button" variant="outline" onClick={prevStep} className="flex-1 h-12">
+                        Atrás
+                      </Button>
+                      <Button 
+                        type="submit" 
+                        disabled={
+                          !acceptTerms || 
+                          isSubmitting || 
+                          (role === "gestor" && !departamentoJefe) || 
+                          (role !== "gestor" && !department.trim())
+                        } 
+                        className="flex-1 h-12 text-lg font-bold rounded-xl"
+                      >
+                        {isSubmitting ? "Enviando..." : "Enviar Solicitud"}
+                      </Button>
+                    </div>
+                  </>
+                )}
                   <div className="text-center pt-6">
                     <p className="text-sm text-slate-600">
                       ¿Ya tienes cuenta?{" "}
