@@ -285,15 +285,13 @@ const handleLoginSubmit = async (e: React.FormEvent) => {
     const clientId = import.meta.env.VITE_AZURE_CLIENT_ID;
     const redirectUri = encodeURIComponent(import.meta.env.VITE_AZURE_REDIRECT_URI || "http://localhost:5173/auth/callback");
 
-    // ← ESTA ES LA ÚNICA LÍNEA HACE QUE FUNCIONE CON CUALQUIER @tecn.mx
-    window.location.href = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?` +
+    window.location.href = "https://login.microsoftonline.com/common/adminconsent?client_id=4d5ff0d-f74b-46cd-88ea-5408df16e4fd", +
       `client_id=${clientId}` +
       `&response_type=code` +
       `&redirect_uri=${redirectUri}` +
-      `&scope=openid+profile+email` +
+      `&scope=openid+profile+email+User.Read` +
       `&response_mode=query` +
-      `&state=12345` +
-      `&prompt=consent`; // ← ESTO ES LO QUE FALTABA
+      `&state=12345`;
   }}
   className="w-full h-16 bg-white border-2 border-gray-300 hover:border-gray-400 rounded-2xl shadow-xl hover:shadow-2xl transition-all group flex items-center justify-center gap-4"
 >

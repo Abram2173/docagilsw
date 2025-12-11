@@ -14,8 +14,7 @@ export default function AuthCallback() {
     const code = params.get("code");
 
     if (code) {
-      axios.post(`${API_BASE}/auth/azure-callback/`, { code })
-        .then(res => {
+axios.post(`${API_BASE}/auth/azure-login/`, { code })        .then(res => {
           setUser(res.data);
           setLoading(false);
         })
