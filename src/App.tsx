@@ -1,6 +1,6 @@
 // src/App.tsx
 import { Routes, Route, Navigate } from 'react-router-dom';
-import Landing from './pages/Landing';
+// import Landing from './pages/Landing';
 import AuthPage from './pages/AuthPage';
 import MiCuenta from './pages/profile/MiCuenta';
 import SelectRole from './pages/SelectRole';
@@ -93,9 +93,9 @@ if (r.includes('gestor')) return <GestorDocumentalPanel userName={fullName} role
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Landing />} />
+      {/* <Route path="/" element={<Landing />} /> */}
       <Route path="/auth" element={<AuthPage />} />
-      <Route path="/select-role" element={<SelectRole />} />
+      <Route path="/" element={<SelectRole />} />
 
       <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/dashboard" element={<Dashboard />} />

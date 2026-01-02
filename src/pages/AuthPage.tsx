@@ -1,6 +1,6 @@
 // src/pages/AuthPage.tsx  ← VERSIÓN FINAL CORREGIDA (login compacto + animación perfecta)
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import logo from '../assets/logo.png';
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -26,6 +26,7 @@ export default function AuthPage() {
     setSearchParams({ tab });
   };
 
+
   // === Todos tus estados (sin cambios) ===
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -48,40 +49,25 @@ export default function AuthPage() {
   const [departamentoJefe, setDepartamentoJefe] = useState("");
 
   // === Tus validaciones y handlers (sin cambios) ===
-const validateEmail = (email: string) => {
-  const lowerEmail = email.toLowerCase().trim();
-  
-  const isValid = 
-    lowerEmail.endsWith('@instituto.edu.mx') || 
-    lowerEmail.endsWith('.tecnm.mx');
 
-  if (email && !isValid) {
-    setEmailError("Solo correos institucionales del TecNM (@instituto.edu.mx o @*.tecnm.mx)");
-    return false;
-  }
-  
-  setEmailError("");
-  return true;
-};
+const handleRegisterEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const value = e.target.value;
+  setRegisterEmail(value);
 
-// === VALIDACIÓN DE EMAIL (CORRECTA) ===
-useEffect(() => {
-  const isValid = 
-    registerEmail.trim() === "" || 
-    registerEmail.toLowerCase().endsWith('@instituto.edu.mx') || 
-    registerEmail.toLowerCase().endsWith('.tecnm.mx');
-
-  if (registerEmail && !isValid) {
-    setEmailError("Solo correos institucionales del TecNM");
-  } else {
+  if (value.trim() === "") {
     setEmailError("");
+  } else {
+    const lowerValue = value.toLowerCase().trim();
+    if (
+      lowerValue.endsWith("@instituto.edu.mx") ||
+      lowerValue.endsWith(".tecnm.mx")
+    ) {
+      setEmailError("");
+    } else {
+      setEmailError("Solo correos institucionales del TecNM (@instituto.edu.mx o @*.tecnm.mx)");
+    }
   }
-}, [registerEmail]);
-
-  const handleRegisterEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setRegisterEmail(e.target.value);
-    validateEmail(e.target.value);
-  };
+};
 
   const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setConfirmPassword(e.target.value);
@@ -136,7 +122,6 @@ useEffect(() => {
     }
   };
 
-
   
 const handleLoginSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
@@ -149,16 +134,23 @@ const handleLoginSubmit = async (e: React.FormEvent) => {
       password: loginPassword,
     });
 
-    // ← SOLO GUARDAMOS LO BÁSICO
+    // Guardamos token y nombre
     localStorage.setItem("token", data.token);
     localStorage.setItem("full_name", data.full_name || loginUsername);
 
-    // ← LIMPIAMOS ROL Y DEPARTAMENTO (para que elija en select-role)
-    localStorage.removeItem("role");
-    localStorage.removeItem("departamentoJefe");
+    // Leemos el rol seleccionado en SelectRole
+    const selectedRole = localStorage.getItem("selectedRole") || "solicitante";
 
-    // ← ENVÍA AL SELECT-ROLE BONITO
-    navigate("/select-role");
+    // Guardamos el rol definitivo
+    localStorage.setItem("role", selectedRole);
+
+    // Departamento si es gestor
+    const dept = localStorage.getItem("departamentoJefe");
+    if (dept) localStorage.setItem("departamentoJefe", dept);
+
+    // ¡NAVEGACIÓN DIRECTA E INMEDIATA!
+    navigate("/dashboard");
+
   } catch (error: any) {
     const responseData = error.response?.data;
     const status = error.response?.status;
@@ -181,7 +173,6 @@ const handleLoginSubmit = async (e: React.FormEvent) => {
     setIsSubmitting(false);
   }
 };
-
 
 
   return (

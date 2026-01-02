@@ -24,7 +24,7 @@ export default function SelectRole() {
     if (role !== "gestor") {
       // ← SI NO ES JEFE, VA DIRECTO AL DASHBOARD
       localStorage.setItem("role", role);
-      navigate("/dashboard");
+      navigate("/auth");
     } else {
       // ← SI ES JEFE, SOLO MUESTRA EL SELECT DE DEPARTAMENTO
       setSelectedRole(role);
@@ -67,7 +67,7 @@ export default function SelectRole() {
       localStorage.setItem("departamentoJefe", departamentoJefe);
     }
 
-    navigate("/dashboard");
+    navigate("/auth");
   };
 
   return (
@@ -147,10 +147,9 @@ export default function SelectRole() {
         <Button
           variant="ghost"
           onClick={() => {
-            localStorage.setItem("role", "admin");
-            navigate("/dashboard");
+            localStorage.setItem("selectedRole", "admin");
+            navigate("/auth");  // ← al login, no dashboard
           }}
-          className="text-gray-500 hover:text-gray-700"
         >
           <Settings className="w-5 h-5 mr-2" />
           Acceso Administrador
