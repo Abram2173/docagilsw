@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";  // ← AGREGADO: Para navigate
 import { cn } from "@/lib/utils";
@@ -284,7 +284,6 @@ const handleSubmit = async (e: React.FormEvent) => {
 
 const [selectedTramite, setSelectedTramite] = useState<any>(null);
 
-const carouselRef = useRef<HTMLDivElement>(null);
 
 // === LISTA DE TRÁMITES ===
 const tramitesList = [
@@ -306,7 +305,7 @@ const TarjetaTramite = ({ item }: { item: any }) => (
       setTitulo(item.titulo);
       handleTipoChange(item.categoria.toLowerCase());
     }}
-    className="w-full max-w-[240px] min-w-[300px] sm:min-w-[280px] bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-400 border border-gray-100 group hover:-translate-y-4 flex-shrink-0 overflow-hidden flex flex-col"
+    className="w-full bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-400 border border-gray-100 group hover:-translate-y-4 overflow-hidden flex flex-col"
   >
     <div className="p-6 sm:p-8 text-left flex-1">
       <h3 className="font-bold text-gray-800 text-lg sm:text-2xl leading-tight mb-3">
@@ -351,40 +350,19 @@ const renderCrearTramite = () => (
 
       {!selectedTramite ? (
         <div className="space-y-8">
-          {/* CARRUSEL INFINITO + RESPONSIVE */}
-{/* CARRUSEL SIN DUPLICAR + FLECHAS + VUELTA AL INICIO */}
-<div className="space-y-10">
-  <div className="overflow-hidden rounded-3xl bg-gradient-to-r from-blue-50/30 via-white to-emerald-50/30 shadow-inner">
-    <div 
-      ref={carouselRef}
-      className="overflow-x-auto scrollbar-hide scroll-smooth"
-    >
-      <div className="flex gap-8 px-6 py-10">
-        {tramitesList.map((item, index) => (
-          <TarjetaTramite key={index} item={item} />
-        ))}
-      </div>
-    </div>
-  </div>
-
-  {/* FLECHAS ABAJO */}
-{/* FLECHAS (opcional) */}
-<div className="flex justify-center items-center gap-12 py-6">
-  <button onClick={() => carouselRef.current?.scrollBy({ left: -400, behavior: "smooth" })}>
-    ←
-  </button>
-  <button onClick={() => carouselRef.current?.scrollBy({ left: 400, behavior: "smooth" })}>
-    →
-  </button>
-</div>
-</div>
+          {/* GRID RESPONSIVE - TODAS LAS TARJETAS VISIBLES SIN SCROLL */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            {tramitesList.map((item, index) => (
+              <TarjetaTramite key={index} item={item} />
+            ))}
+          </div>
         </div>
       ) : (
-  /* === TU FORMULARIO === */
-  <div className="max-w-3xl mx-auto space-y-8">
-    <Button variant="ghost" size="sm" onClick={() => setSelectedTramite(null)}>
-      ← Volver a selección
-    </Button>
+        /* === TU FORMULARIO === */
+        <div className="max-w-3xl mx-auto space-y-8">
+          <Button variant="ghost" size="sm" onClick={() => setSelectedTramite(null)}>
+            ← Volver a selección
+          </Button>
 
           <Alert className="border-green-200 bg-green-50">
             <CheckCircle2 className="h-6 w-6 text-green-600" />

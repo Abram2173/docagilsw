@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
-import { Building2, Shield, FileText, CheckCircle2, GraduationCap, Settings, Sparkles, Lightbulb } from "lucide-react"
+import { Building2, Shield, FileText, CheckCircle2, GraduationCap, Settings, Lightbulb, CircleCheck } from "lucide-react"
 import { useState } from "react";
 
 export default function SelectRole() {
@@ -75,13 +75,14 @@ export default function SelectRole() {
       {/* Logo */}
       <div className="text-center mb-12">
         <div className="flex justify-center items-center gap-4 mb-8">
-          <div className="relative">
-            <Lightbulb className="w-20 h-20 text-[#0EA5E9] fill-[#0EA5E9]" />
-            <Sparkles className="w-10 h-10 text-[#10B981] absolute -top-2 -right-2" />
-          </div>
+
           <h1 className="text-7xl font-black bg-gradient-to-r from-[#0EA5E9] to-[#10B981] bg-clip-text text-transparent">
             Dart
           </h1>
+                    <div className="relative">
+            <Lightbulb className="w-20 h-20 text-[#0EA5E9] fill-[#0EA5E9]" />
+            <CircleCheck className="w-10 h-10 text-[#10B981] absolute -top-2 -right-2" />
+          </div>
         </div>
         <h2 className="text-4xl font-bold text-gray-900 mb-4">
           ¿Quién eres en la institución?
