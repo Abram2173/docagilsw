@@ -1,6 +1,5 @@
 // src/App.tsx
 import { Routes, Route, Navigate } from 'react-router-dom';
-// import Landing from './pages/Landing';
 import AuthPage from './pages/AuthPage';
 import MiCuenta from './pages/profile/MiCuenta';
 import SelectRole from './pages/SelectRole';
@@ -9,13 +8,13 @@ import SelectRole from './pages/SelectRole';
 import SolicitantePanel from './components/roles/SolicitantePanel';
 import AprobadorPanel from './components/roles/AprobadorPanel';
 import AuditorPanel from './components/roles/AuditorPanel';
-import GestorDocumentalPanel from './components/roles/JefeDepartamentoPanel'; // panel genérico (opcional)
+import GestorDocumentalPanel from './components/roles/JefeDepartamentoPanel'; // panel genérico para jefes
 import AdministradorPanel from './components/roles/AdministradorPanel';
 import DirectorPanel from './components/roles/DirectorPanel';
 import SubdirectorPanel from './components/roles/SubdirectorPanel';
 import CoordinadorPanel from './components/roles/CoordinadorPanel';
 
-// ← IMPORTS DE LOS PANELES DE JEFES
+// PANELES DE JEFES ESPECÍFICOS
 import JefeIMSSPanel from './components/roles/jefes/JefeIMSSPanel';
 import JefeBecasPanel from './components/roles/jefes/JefeBecasPanel';
 import JefeServiciosEscolaresPanel from './components/roles/jefes/JefeServiciosEscolaresPanel';
@@ -44,31 +43,32 @@ function Dashboard() {
     return <Navigate to="/select-role" replace />;
   }
 
-  // ← IGNORA MAYÚSCULAS
+  // Normalizamos el rol (minúsculas y sin espacios extras)
   const r = role.toLowerCase().trim();
 
-  // ← PANEL SEGÚN ROL
-// ← PANEL SEGÚN ROL (ORDEN CORRECTO)
-if (r.includes('solicitante')) return <SolicitantePanel userName={fullName} role={role} />;
-if (r.includes('aprobador') || r.includes('revisor')) return <AprobadorPanel userName={fullName} role={role} />;
-if (r.includes('auditor')) return <AuditorPanel userName={fullName} role={role} />;
-if (r.includes('admin') || r.includes('administrador')) return <AdministradorPanel userName={fullName} role={role} />;
-if (r === 'director') return <DirectorPanel userName={fullName} role={role} />;  // ← PRIMERO EL DIRECTOR
-if (r === 'subdirector') return <SubdirectorPanel userName={fullName} role={role} />;  // ← DESPUÉS EL SUBDIRECTOR
-if (r.includes('coordinador')) return <CoordinadorPanel userName={fullName} role={role} />;
+  // === PRIORIZAMOS ROLES ESPECÍFICOS (director y subdirector primero) ===
+  if (r === 'director') return <DirectorPanel userName={fullName} role={role} />;
+  if (r === 'subdirector') return <SubdirectorPanel userName={fullName} role={role} />;
 
-// ← JEFES ESPECÍFICOS
-if (r === 'gestor_imss') return <JefeIMSSPanel userName={fullName} role={role} />;
-if (r === 'gestor_becas') return <JefeBecasPanel userName={fullName} role={role} />;
-// if (r === 'gestor_inscripciones') return <JefeInscripcionesPanel userName={fullName} role={role} />;
-if (r === 'gestor_servicios') return <JefeServiciosEscolaresPanel userName={fullName} role={role} />;
-if (r === 'gestor_biblioteca') return <JefeBibliotecaPanel userName={fullName} role={role} />;
+  // === OTROS ROLES ADMINISTRATIVOS ===
+  if (r.includes('admin') || r.includes('administrador')) return <AdministradorPanel userName={fullName} role={role} />;
+  if (r.includes('aprobador') || r.includes('revisor')) return <AprobadorPanel userName={fullName} role={role} />;
+  if (r.includes('auditor')) return <AuditorPanel userName={fullName} role={role} />;
+  if (r.includes('coordinador')) return <CoordinadorPanel userName={fullName} role={role} />;
 
-// ← JEFE GENÉRICO
-if (r.includes('gestor')) return <GestorDocumentalPanel userName={fullName} role={role} />;
+  // === JEFES DE DEPARTAMENTO ESPECÍFICOS ===
+  if (r === 'gestor_imss' || r.includes('imss')) return <JefeIMSSPanel userName={fullName} role={role} />;
+  if (r === 'gestor_becas' || r.includes('becas')) return <JefeBecasPanel userName={fullName} role={role} />;
+  if (r === 'gestor_servicios' || r.includes('servicios escolares')) return <JefeServiciosEscolaresPanel userName={fullName} role={role} />;
+  if (r === 'gestor_biblioteca' || r.includes('biblioteca')) return <JefeBibliotecaPanel userName={fullName} role={role} />;
 
-// ← ACCESO DENEGADO
-  // ← MENSAJE DE ACCESO DENEGADO
+  // === JEFE GENÉRICO (cualquier otro gestor) ===
+  if (r.includes('gestor') || r.includes('jefe')) return <GestorDocumentalPanel userName={fullName} role={role} />;
+
+  // === ESTUDIANTE / SOLICITANTE (al final para evitar conflictos) ===
+  if (r.includes('solicitante') || r.includes('estudiante')) return <SolicitantePanel userName={fullName} role={role} />;
+
+  // === SI NO COINCIDE NINGÚN ROL → ACCESO DENEGADO ===
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="text-center p-10 bg-white rounded-3xl shadow-2xl max-w-md">
@@ -78,12 +78,21 @@ if (r.includes('gestor')) return <GestorDocumentalPanel userName={fullName} role
           </svg>
         </div>
         <h1 className="text-3xl font-bold text-gray-800 mb-4">Acceso Denegado</h1>
-        <p className="text-lg text-gray-600 mb-8">
-          No tienes permiso para acceder a este panel.<br />
-          Tu rol no está autorizado para esta sección.
+        <p className="text-lg text-gray-600 mb-4">
+          Tu rol actual: <strong>"{role || 'No definido'}"</strong>
         </p>
-        <Button onClick={() => window.location.href = "/dashboard"} className="bg-blue-600 hover:bg-blue-700 text-white">
-          Volver al Dashboard
+        <p className="text-gray-600 mb-8">
+          No tienes permiso para acceder a ningún panel con este rol.<br />
+          Contacta al administrador o cierra sesión.
+        </p>
+        <Button 
+          onClick={() => {
+            localStorage.clear();
+            window.location.href = "/auth";
+          }} 
+          className="bg-red-600 hover:bg-red-700 text-white"
+        >
+          Cerrar Sesión
         </Button>
       </div>
     </div>
@@ -93,16 +102,23 @@ if (r.includes('gestor')) return <GestorDocumentalPanel userName={fullName} role
 function App() {
   return (
     <Routes>
-      {/* <Route path="/" element={<Landing />} /> */}
       <Route path="/auth" element={<AuthPage />} />
-      <Route path="/" element={<SelectRole />} />
-
       <Route path="/auth/callback" element={<AuthCallback />} />
+      
+      {/* Si hay token pero no rol, va a seleccionar rol */}
+      <Route path="/" element={<SelectRole />} />
+      
+      {/* Dashboard principal – decide el panel según rol */}
       <Route path="/dashboard" element={<Dashboard />} />
-
+      
+      {/* Cualquier otra ruta va al dashboard si está logueado */}
       <Route path="*" element={<Dashboard />} />
-
-      <Route path="/cuenta" element={localStorage.getItem('token') ? <MiCuenta /> : <Navigate to="/auth" replace />} />
+      
+      {/* Perfil protegido */}
+      <Route 
+        path="/cuenta" 
+        element={localStorage.getItem('token') ? <MiCuenta /> : <Navigate to="/auth" replace />} 
+      />
     </Routes>
   );
 }

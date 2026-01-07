@@ -1,5 +1,3 @@
-// src/pages/AuthPage.tsx  ← VERSIÓN FINAL CORREGIDA (login compacto + animación perfecta)
-
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import logo from '../assets/logo.png';
@@ -26,8 +24,6 @@ export default function AuthPage() {
     setSearchParams({ tab });
   };
 
-
-  // === Todos tus estados (sin cambios) ===
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [loginUsername, setLoginUsername] = useState("");
@@ -48,26 +44,24 @@ export default function AuthPage() {
 
   const [departamentoJefe, setDepartamentoJefe] = useState("");
 
-  // === Tus validaciones y handlers (sin cambios) ===
+  const handleRegisterEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setRegisterEmail(value);
 
-const handleRegisterEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const value = e.target.value;
-  setRegisterEmail(value);
-
-  if (value.trim() === "") {
-    setEmailError("");
-  } else {
-    const lowerValue = value.toLowerCase().trim();
-    if (
-      lowerValue.endsWith("@instituto.edu.mx") ||
-      lowerValue.endsWith(".tecnm.mx")
-    ) {
+    if (value.trim() === "") {
       setEmailError("");
     } else {
-      setEmailError("Solo correos institucionales del TecNM (@instituto.edu.mx o @*.tecnm.mx)");
+      const lowerValue = value.toLowerCase().trim();
+      if (
+        lowerValue.endsWith("@instituto.edu.mx") ||
+        lowerValue.endsWith(".tecnm.mx")
+      ) {
+        setEmailError("");
+      } else {
+        setEmailError("Solo correos institucionales del TecNM (@instituto.edu.mx o @*.tecnm.mx)");
+      }
     }
-  }
-};
+  };
 
   const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setConfirmPassword(e.target.value);
@@ -122,57 +116,66 @@ const handleRegisterEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     }
   };
 
-  
-const handleLoginSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setIsSubmitting(true);
-  setErrorMsg("");
+  const handleLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setErrorMsg("");
 
-  try {
-    const { data } = await axios.post(`${API_BASE}/auth/login/`, {
-      username: loginUsername,
-      password: loginPassword,
-    });
+    try {
+      const { data } = await axios.post(`${API_BASE}/auth/login/`, {
+        username: loginUsername,
+        password: loginPassword,
+      });
 
-    // Guardamos token y nombre
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("full_name", data.full_name || loginUsername);
+      // Guardamos token y nombre
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("full_name", data.full_name || data.name || loginUsername);
 
-    // Leemos el rol seleccionado en SelectRole
-    const selectedRole = localStorage.getItem("selectedRole") || "solicitante";
+      // === CAMBIO CLAVE: NO DEFAULT A "solicitante" ===
+      // Tomamos el rol del backend si viene, o del SelectRole si existe
+      const backendRole = data.role || data.user?.role || data.tipo_usuario;
+      const selectedRole = localStorage.getItem("selectedRole");
 
-    // Guardamos el rol definitivo
-    localStorage.setItem("role", selectedRole);
+      const finalRole = backendRole || selectedRole;
 
-    // Departamento si es gestor
-    const dept = localStorage.getItem("departamentoJefe");
-    if (dept) localStorage.setItem("departamentoJefe", dept);
+      if (!finalRole) {
+        // Si no hay rol definido → fuerza ir a SelectRole
+        navigate("/select-role");
+        setIsSubmitting(false);
+        return;
+      }
 
-    // ¡NAVEGACIÓN DIRECTA E INMEDIATA!
-    navigate("/dashboard");
+      localStorage.setItem("role", finalRole);
 
-  } catch (error: any) {
-    const responseData = error.response?.data;
-    const status = error.response?.status;
+      // Departamento jefe si aplica
+      const dept = localStorage.getItem("departamentoJefe");
+      if (dept) localStorage.setItem("departamentoJefe", dept);
 
-    const isPending =
-      status === 403 ||
-      status === 401 ||
-      (responseData?.detail && /pendiente|aprob|revis|aprobar|activar|pending|not approved|espera|administrador/i.test(responseData.detail)) ||
-      (responseData?.non_field_errors && responseData.non_field_errors.some((msg: string) =>
-        /pendiente|aprob|revis|aprobar|activar|pending|not approved|espera|administrador/i.test(msg)
-      ));
+      // Navegación directa al dashboard (el App.tsx decidirá el panel correcto)
+      navigate("/dashboard");
 
-    if (isPending) {
-      setShowPendingModal(true);
-      setErrorMsg("");
-    } else {
-      setErrorMsg("Usuario o contraseña incorrectos");
+    } catch (error: any) {
+      const responseData = error.response?.data;
+      const status = error.response?.status;
+
+      const isPending =
+        status === 403 ||
+        status === 401 ||
+        (responseData?.detail && /pendiente|aprob|revis|aprobar|activar|pending|not approved|espera|administrador/i.test(responseData.detail)) ||
+        (responseData?.non_field_errors && responseData.non_field_errors.some((msg: string) =>
+          /pendiente|aprob|revis|aprobar|activar|pending|not approved|espera|administrador/i.test(msg)
+        ));
+
+      if (isPending) {
+        setShowPendingModal(true);
+        setErrorMsg("");
+      } else {
+        setErrorMsg("Usuario o contraseña incorrectos");
+      }
+    } finally {
+      setIsSubmitting(false);
     }
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+  };
 
 
   return (
